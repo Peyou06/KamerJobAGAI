@@ -1,0 +1,7 @@
+flask>=2.0.0
+openpyxl>=3.0.0
+pypdf>=4.0.0
+google-auth>=2.0.0
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.2.0
+# Optionnel : playwright>=1.40.0
