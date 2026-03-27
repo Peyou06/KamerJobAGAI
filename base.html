@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="sepia">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CamerJob Watch{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ── THÈMES ───────────────────────────────────────────────────────────── */
+    :root,[data-theme="dark"]{
+      --bg:       #0F1117;
+      --card:     #161B22;
+      --card2:    #1C2230;
+      --border:   #2A3240;
+      --text:     #E6EDF3;
+      --muted:    #8B949E;
+      --sidebar-bg:#161B22;
+      --topbar-bg:#161B22;
+      --input-bg: #1C2230;
+      --hover-bg: #1C2230;
+      --shadow:   rgba(0,0,0,.4);
+      --green:#00A550;--green-d:#007A3D;--accent:#00C96A;
+      --red:#CE1126;--yellow:#FCD116;
+    }
+    [data-theme="light"]{
+      --bg:       #F0F4F8;
+      --card:     #FFFFFF;
+      --card2:    #F5F7FA;
+      --border:   #DDE3EC;
+      --text:     #1A202C;
+      --muted:    #6B7280;
+      --sidebar-bg:#FFFFFF;
+      --topbar-bg:#FFFFFF;
+      --input-bg: #F5F7FA;
+      --hover-bg: #EFF2F7;
+      --shadow:   rgba(0,0,0,.1);
+      --green:#00A550;--green-d:#007A3D;--accent:#00924A;
+      --red:#CE1126;--yellow:#E5A900;
+    }
+    [data-theme="green"]{
+      --bg:       #071A0F;
+      --card:     #0C2218;
+      --card2:    #112B1E;
+      --border:   #1A3D29;
+      --text:     #D4F0E2;
+      --muted:    #6BAF88;
+      --sidebar-bg:#0A1E12;
+      --topbar-bg:#0A1E12;
+      --input-bg: #112B1E;
+      --hover-bg: #153324;
+      --shadow:   rgba(0,0,0,.5);
+      --green:#00C962;--green-d:#009448;--accent:#00FF80;
+      --red:#FF4466;--yellow:#FFD700;
+    }
+    [data-theme="blue"]{
+      --bg:       #0A0F1E;
+      --card:     #101828;
+      --card2:    #182135;
+      --border:   #243351;
+      --text:     #E2E8F8;
+      --muted:    #7B90C0;
+      --sidebar-bg:#0D1525;
+      --topbar-bg:#0D1525;
+      --input-bg: #182135;
+      --hover-bg: #1E2D47;
+      --shadow:   rgba(0,0,0,.5);
+      --green:#3B82F6;--green-d:#2563EB;--accent:#60A5FA;
+      --red:#EF4444;--yellow:#F59E0B;
+    }
+    [data-theme="sepia"]{
+      --bg:       #F5ECD7;
+      --card:     #FDF6E3;
+      --card2:    #F0E6CC;
+      --border:   #D5C4A1;
+      --text:     #3C2F1A;
+      --muted:    #7D6540;
+      --sidebar-bg:#F0E2C4;
+      --topbar-bg:#F0E2C4;
+      --input-bg: #EDE0C4;
+      --hover-bg: #E8D9B8;
+      --shadow:   rgba(0,0,0,.1);
+      --green:#5A7A30;--green-d:#3D5520;--accent:#6B8F38;
+      --red:#C0392B;--yellow:#D4A017;
+    }
+
+    /* ── BASE ─────────────────────────────────────────────────────────────── */
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);font-size:15px;transition:background .25s,color .25s}
+    a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:'Outfit',sans-serif}input,select,textarea{font-family:'Outfit',sans-serif}
+
+    /* ── SIDEBAR ──────────────────────────────────────────────────────────── */
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:200px;background:var(--sidebar-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;transition:background .25s}
+    .logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+    .logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    .logo-icon{width:36px;height:36px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+    .logo-text{font-size:16px;font-weight:800;line-height:1.1}
+    .logo-sub{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+    .flag{display:flex;gap:3px;margin-top:8px}.flag span{height:3px;border-radius:2px;flex:1}
+    nav{padding:16px 8px;flex:1;overflow-y:auto}
+    .nav-section{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:6px 8px 4px;margin-top:8px}
+    .nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:var(--muted);font-size:14px;font-weight:500;transition:all .2s;margin-bottom:2px}
+    .nav-link:hover{background:var(--hover-bg);color:var(--text)}
+    .nav-link.active{background:rgba(0,165,80,.15);color:var(--accent);border:1px solid rgba(0,165,80,.2)}
+    .nav-link .icon{width:18px;text-align:center;font-size:16px}
+    .sidebar-footer{padding:12px 16px;border-top:1px solid var(--border)}
+    .version{font-size:11px;color:var(--muted);text-align:center}
+
+    /* ── MAIN ─────────────────────────────────────────────────────────────── */
+    .main{margin-left:200px;min-height:100vh;display:flex;flex-direction:column}
+    .topbar{height:56px;background:var(--topbar-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:50;transition:background .25s}
+    .topbar-title{font-size:18px;font-weight:700;flex:1}
+    .topbar-actions{display:flex;gap:8px;align-items:center}
+    .content{padding:24px;flex:1}
+
+    /* ── THEME SWITCHER ───────────────────────────────────────────────────── */
+    .theme-btn{background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .theme-btn:hover{border-color:var(--green);color:var(--text)}
+    .theme-panel{position:absolute;top:52px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;width:260px;box-shadow:0 8px 32px var(--shadow);z-index:200;display:none;animation:slideUp .2s ease}
+    .theme-panel.show{display:block}
+    .theme-panel-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+    .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .theme-option{padding:10px 12px;border-radius:8px;border:2px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;text-align:center;transition:all .2s;display:flex;align-items:center;gap:8px}
+    .theme-option:hover{border-color:var(--green)}
+    .theme-option.active{border-color:var(--accent);background:rgba(0,165,80,.1)}
+    .theme-swatch{width:16px;height:16px;border-radius:50%;flex-shrink:0}
+
+    /* ── CARDS ────────────────────────────────────────────────────────────── */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:background .25s}
+    .card-sm{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+
+    /* ── STATS ────────────────────────────────────────────────────────────── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;position:relative;overflow:hidden;transition:background .25s}
+    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+    .stat-card.green::before{background:var(--green)}.stat-card.red::before{background:var(--red)}
+    .stat-card.yellow::before{background:var(--yellow)}.stat-card.blue::before{background:#3B82F6}
+    .stat-card.purple::before{background:#8B5CF6}.stat-card.orange::before{background:#F97316}
+    .stat-num{font-size:32px;font-weight:800;line-height:1;margin-bottom:4px}
+    .stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .stat-icon{position:absolute;right:16px;top:16px;font-size:28px;opacity:.15}
+
+    /* ── BUTTONS ──────────────────────────────────────────────────────────── */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;border:none;transition:all .2s;white-space:nowrap;cursor:pointer}
+    .btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-d)}
+    .btn-secondary{background:var(--card2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--green);color:var(--accent)}
+    .btn-danger{background:rgba(206,17,38,.12);color:#EF4444;border:1px solid rgba(206,17,38,.2)}.btn-danger:hover{background:var(--red);color:#fff}
+    .btn-orange{background:rgba(249,115,22,.12);color:#F97316;border:1px solid rgba(249,115,22,.2)}.btn-orange:hover{background:#F97316;color:#fff}
+    .btn-sm{padding:5px 12px;font-size:12px}.btn-icon{padding:7px;border-radius:7px}
+
+    /* ── BADGES ───────────────────────────────────────────────────────────── */
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+    .badge-green{background:rgba(0,165,80,.12);color:var(--accent);border:1px solid rgba(0,165,80,.2)}
+    .badge-orange{background:rgba(249,115,22,.12);color:#F97316;border:1px solid rgba(249,115,22,.2)}
+    .badge-red{background:rgba(206,17,38,.12);color:#EF4444;border:1px solid rgba(206,17,38,.2)}
+    .badge-blue{background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.2)}
+    .badge-gray{background:rgba(128,128,128,.1);color:var(--muted);border:1px solid var(--border)}
+
+    /* ── FORM ─────────────────────────────────────────────────────────────── */
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+    .form-control{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:14px;transition:border-color .2s,background .25s;outline:none}
+    .form-control:focus{border-color:var(--green)}
+    .form-control option{background:var(--card)}
+    textarea.form-control{resize:vertical;min-height:80px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    /* ── TABLE ────────────────────────────────────────────────────────────── */
+    .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse}
+    th{background:var(--card2);padding:11px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+    td{padding:12px 14px;border-bottom:1px solid rgba(128,128,128,.08);font-size:13px;vertical-align:top}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:var(--hover-bg)}
+
+    /* ── MODAL ────────────────────────────────────────────────────────────── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1000;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.show{display:flex}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:slideUp .25s ease}
+    .modal-lg{max-width:720px}
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+    .modal-header{padding:20px 24px 0;display:flex;align-items:center;gap:12px;margin-bottom:4px}
+    .modal-title{font-size:18px;font-weight:700;flex:1}
+    .modal-close{background:var(--card2);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .modal-close:hover{color:var(--text)}
+    .modal-body{padding:20px 24px}
+    .modal-footer{padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end}
+
+    /* ── TOAST ────────────────────────────────────────────────────────────── */
+    #toast{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+    .toast-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px var(--shadow);animation:toastIn .3s ease;min-width:240px}
+    .toast-item.success{border-color:rgba(0,165,80,.4)}.toast-item.error{border-color:rgba(206,17,38,.4)}
+    @keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+    /* ── OFFER CARD ───────────────────────────────────────────────────────── */
+    .offer-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all .2s;display:flex;flex-direction:column;gap:10px}
+    .offer-card:hover{border-color:rgba(0,165,80,.3);transform:translateY(-1px);box-shadow:0 4px 16px var(--shadow)}
+    .offer-card.ao{border-left:3px solid #F97316}.offer-card.emploi{border-left:3px solid var(--green)}
+    .offer-title{font-size:15px;font-weight:700;line-height:1.3}
+    .offer-org{font-size:13px;color:var(--muted)}
+    .offer-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+    .offer-meta .meta-item{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+
+    /* ── MISC ─────────────────────────────────────────────────────────────── */
+    .search-box{position:relative}.search-box input{padding-left:36px}
+    .search-box .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+    .pagination{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+    .page-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .2s}
+    .page-btn:hover,.page-btn.active{background:var(--green);border-color:var(--green);color:#fff}
+    .page-info{font-size:13px;color:var(--muted);padding:0 8px}
+    .progress{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+    .progress-bar{height:100%;background:var(--green);border-radius:3px;transition:width .4s}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+    .empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+    .empty-title{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--text)}
+    .separator{height:1px;background:var(--border);margin:16px 0}
+    ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    .spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    /* utils */
+    .flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-2{gap:8px}.gap-3{gap:12px}.flex-1{flex:1}.flex-wrap{flex-wrap:wrap}
+    .mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}.mb-4{margin-bottom:16px}.mb-6{margin-bottom:24px}.mt-2{margin-top:8px}.mt-4{margin-top:16px}
+    .text-sm{font-size:13px}.text-xs{font-size:11px}.text-muted{color:var(--muted)}.text-green{color:var(--accent)}.text-red{color:#EF4444}.text-orange{color:#F97316}
+    .font-bold{font-weight:700}.font-semibold{font-weight:600}.w-full{width:100%}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">🇨🇲</div>
+      <div><div class="logo-text">CamerJob</div><div class="logo-sub">Watch</div></div>
+    </div>
+    <div class="flag"><span style="background:#007A3D"></span><span style="background:#CE1126"></span><span style="background:#FCD116"></span></div>
+  </div>
+  <nav>
+    <div class="nav-section">Navigation</div>
+    <a href="/" class="nav-link {% if request.endpoint=='index' %}active{% endif %}"><span class="icon">📊</span> Tableau de bord</a>
+    <a href="/offers?type=emploi" class="nav-link {% if request.endpoint=='offers' and request.args.get('type')=='emploi' %}active{% endif %}"><span class="icon">💼</span> Offres d'emploi</a>
+    <a href="/offers?type=appel_offre" class="nav-link {% if request.endpoint=='offers' and request.args.get('type')=='appel_offre' %}active{% endif %}"><span class="icon">📋</span> Appels d'offres</a>
+    <a href="/offers" class="nav-link {% if request.endpoint=='offers' and not request.args.get('type') %}active{% endif %}"><span class="icon">🔍</span> Toutes les offres</a>
+    <div class="nav-section">Gestion</div>
+    <a href="/sources" class="nav-link {% if request.endpoint=='sources_page' %}active{% endif %}"><span class="icon">🌐</span> Sources</a>
+    <a href="/reports" class="nav-link {% if request.endpoint=='reports' %}active{% endif %}"><span class="icon">📈</span> Rapports & Export</a>
+    <div class="nav-section">Outils</div>
+    <a href="/portails" class="nav-link {% if request.endpoint=='portails' %}active{% endif %}"><span class="icon">🔗</span> Portails emploi</a>
+    <a href="/cv" class="nav-link {% if request.endpoint=='cv_page' %}active{% endif %}"><span class="icon">📄</span> Créer mon CV</a>
+    <a href="/agent" class="nav-link {% if request.endpoint=='agent_page' %}active{% endif %}"><span class="icon">🤖</span> Mon Agent IA</a>
+    <a href="/parametres" class="nav-link {% if request.endpoint=='parametres' %}active{% endif %}"><span class="icon">⚙️</span> Paramètres</a>
+    <div class="nav-section">Admin</div>
+    <a href="/admin/agent" class="nav-link {% if request.endpoint=='admin_agent' %}active{% endif %}"><span class="icon">🛡️</span> Admin Agent</a>
+  </nav>
+  <div class="sidebar-footer"><div class="version">v2.0 · Peyou Said</div></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar" style="position:relative">
+    <div class="topbar-title">{% block page_title %}CamerJob Watch{% endblock %}</div>
+    <div class="topbar-actions">
+      <!-- Theme switcher -->
+      <button class="theme-btn" onclick="toggleThemePanel()" id="themeToggleBtn">
+        <span id="themeIcon">🌙</span> <span id="themeLabel">Thème</span>
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal('emploi')">+ Emploi</button>
+      <button class="btn btn-orange btn-sm" onclick="openAddModal('appel_offre')">+ Appel d'offre</button>
+    </div>
+
+    <!-- Theme panel -->
+    <div class="theme-panel" id="themePanel">
+      <div class="theme-panel-title">🎨 Choisir un thème</div>
+      <div class="theme-grid">
+        <div class="theme-option" onclick="setTheme('dark')" data-t="dark">
+          <div class="theme-swatch" style="background:#161B22;border:2px solid #2A3240"></div> 🌙 Sombre
+        </div>
+        <div class="theme-option" onclick="setTheme('light')" data-t="light">
+          <div class="theme-swatch" style="background:#FFFFFF;border:2px solid #DDE3EC"></div> ☀️ Clair
+        </div>
+        <div class="theme-option" onclick="setTheme('green')" data-t="green">
+          <div class="theme-swatch" style="background:#0C2218;border:2px solid #00C962"></div> 🌿 Forêt
+        </div>
+        <div class="theme-option" onclick="setTheme('blue')" data-t="blue">
+          <div class="theme-swatch" style="background:#101828;border:2px solid #3B82F6"></div> 🌊 Océan
+        </div>
+        <div class="theme-option" onclick="setTheme('sepia')" data-t="sepia">
+          <div class="theme-swatch" style="background:#FDF6E3;border:2px solid #D5C4A1"></div> 📜 Sépia
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">{% block content %}{% endblock %}</div>
+</main>
+
+<div id="toast"></div>
+
+<!-- ADD OFFER MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="addModalTitle">Ajouter une offre</div>
+      <div class="modal-close" onclick="closeModal('addModal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <!-- Onglets Manuel / URL -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <button class="btn btn-primary btn-sm" id="tabManuel" onclick="switchAddTab('manuel')">✏️ Saisie manuelle</button>
+        <button class="btn btn-secondary btn-sm" id="tabUrl" onclick="switchAddTab('url')">🔗 Depuis un lien</button>
+      </div>
+      <!-- Panneau URL -->
+      <div id="panelUrl" style="display:none">
+        <div class="form-group"><label class="form-label">Lien de l'offre *</label>
+          <input id="urlOfferInput" class="form-control" placeholder="https://louma-jobs.com/cameroun/...">
+        </div>
+        <div class="form-group"><label class="form-label">Type</label>
+          <select id="urlOfferType" class="form-control"><option value="emploi">Emploi / Stage</option><option value="appel_offre">Appel d'offre</option></select>
+        </div>
+        <div id="urlPreviewBox" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:10px">
+          <div class="font-semibold mb-2" id="urlPrevTitle"></div>
+          <div class="text-sm text-muted" id="urlPrevOrg"></div>
+        </div>
+        <div id="urlErrBox" class="text-red text-sm mt-2" style="display:none"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn btn-secondary btn-sm" onclick="fetchOfferFromUrl()">🔍 Analyser le lien</button>
+          <button class="btn btn-primary btn-sm" id="urlSaveBtn" style="display:none" onclick="saveOfferFromUrl()">💾 Enregistrer</button>
+        </div>
+      </div>
+      <!-- Panneau Manuel -->
+      <div id="panelManuel">
+      <input type="hidden" id="addOfferType" value="emploi">
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Titre *</label>
+          <input id="addTitle" class="form-control" placeholder="Titre du poste ou de l'appel d'offre">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Organisation</label>
+          <input id="addOrg" class="form-control" placeholder="Nom de l'organisation">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Localisation</label>
+          <select id="addLocation" class="form-control">
+            <option>Cameroun</option><option>Douala</option><option>Yaoundé</option>
+            <option>Bafoussam</option><option>Garoua</option><option>Maroua</option>
+            <option>Bertoua</option><option>Ebolowa</option><option>Ngaoundéré</option>
+            <option>Bamenda</option><option>Buea</option><option>Limbe</option><option>Kribi</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Secteur</label>
+          <select id="addSector" class="form-control">
+            <option value="">-- Secteur --</option>
+            <option>Informatique & Tech</option><option>Finance & Banque</option>
+            <option>Santé</option><option>Éducation</option><option>Génie Civil & BTP</option>
+            <option>Télécoms</option><option>Agriculture</option><option>Transport & Logistique</option>
+            <option>Humanitaire & ONG</option><option>Administration & RH</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type de contrat</label>
+          <select id="addContract" class="form-control">
+            <option value="">-- Type --</option>
+            <option>CDI</option><option>CDD</option><option>Stage</option>
+            <option>Consultant</option><option>Vacataire</option><option>Intérim</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" id="rowEmploi">
+        <div class="form-group">
+          <label class="form-label">Salaire</label>
+          <input id="addSalary" class="form-control" placeholder="Ex: 300 000 - 500 000 FCFA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date limite</label>
+          <input id="addDeadline" class="form-control" type="date">
+        </div>
+      </div>
+      <div id="rowAO" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Référence</label>
+            <input id="addRef" class="form-control" placeholder="AO/MINTP/2025/001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Budget estimé</label>
+            <input id="addBudget" class="form-control" placeholder="500 000 000 FCFA">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Autorité contractante</label>
+            <input id="addAuthority" class="form-control" placeholder="Ministère, Société...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date limite</label>
+            <input id="addDeadlineAO" class="form-control" type="date">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lien / URL</label>
+        <input id="addUrl" class="form-control" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea id="addDesc" class="form-control" rows="3" placeholder="Description détaillée..."></textarea>
+      </div>
+      </div><!-- fin panelManuel -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addModal')">Annuler</button>
+      <button class="btn btn-primary" id="addSaveBtn" onclick="submitAddOffer()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── THEME SYSTEM ─────────────────────────────────────────────────────────── */
+const THEMES = {
+  dark:  { icon:'🌙', label:'Sombre' },
+  light: { icon:'☀️', label:'Clair' },
+  green: { icon:'🌿', label:'Forêt' },
+  blue:  { icon:'🌊', label:'Océan' },
+  sepia: { icon:'📜', label:'Sépia' },
+};
+
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('camerajob_theme', t);
+  document.getElementById('themeIcon').textContent  = THEMES[t].icon;
+  document.getElementById('themeLabel').textContent = THEMES[t].label;
+  document.querySelectorAll('.theme-option').forEach(el => {
+    el.classList.toggle('active', el.dataset.t === t);
+  });
+  // Fermer panel
+  document.getElementById('themePanel').classList.remove('show');
+}
+
+function toggleThemePanel() {
+  document.getElementById('themePanel').classList.toggle('show');
+}
+
+// Fermer panel au clic extérieur
+document.addEventListener('click', e => {
+  const panel = document.getElementById('themePanel');
+  const btn   = document.getElementById('themeToggleBtn');
+  if (!panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('show');
+  }
+});
+
+// Charger thème sauvegardé
+(function() {
+  const saved = localStorage.getItem('camerajob_theme') || 'sepia';
+  setTheme(saved);
+})();
+
+/* ── TOAST ────────────────────────────────────────────────────────────────── */
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✅':'❌'}</span> ${msg}`;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .4s'},3200);
+  setTimeout(()=>el.remove(),3700);
+}
+
+/* ── API ──────────────────────────────────────────────────────────────────── */
+async function api(url, opts={}) {
+  const r = await fetch(url, {headers:{'Content-Type':'application/json'},...opts});
+  return await r.json();
+}
+
+/* ── MODALS ───────────────────────────────────────────────────────────────── */
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(m =>
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('show'); })
+);
+
+function openAddModal(type='emploi') {
+  document.getElementById('addOfferType').value = type;
+  document.getElementById('addModalTitle').textContent = type==='emploi'
+    ? '💼 Ajouter une offre d\'emploi' : '📋 Ajouter un appel d\'offre';
+  document.getElementById('rowEmploi').style.display = type==='emploi' ? '' : 'none';
+  document.getElementById('rowAO').style.display     = type==='appel_offre' ? '' : 'none';
+  switchAddTab('manuel');
+  openModal('addModal');
+}
+
+async function submitAddOffer() {
+  const type  = document.getElementById('addOfferType').value;
+  const title = document.getElementById('addTitle').value.trim();
+  if (!title) { toast('Le titre est obligatoire','error'); return; }
+  const deadline = type==='emploi'
+    ? document.getElementById('addDeadline').value
+    : document.getElementById('addDeadlineAO').value;
+  const data = {
+    offer_type: type, title,
+    organization:  document.getElementById('addOrg').value,
+    location:      document.getElementById('addLocation').value,
+    sector:        document.getElementById('addSector').value,
+    contract_type: document.getElementById('addContract').value,
+    salary:        document.getElementById('addSalary').value,
+    deadline,
+    url:           document.getElementById('addUrl').value,
+    description:   document.getElementById('addDesc').value,
+    reference:     document.getElementById('addRef').value,
+    budget:        document.getElementById('addBudget').value,
+    authority:     document.getElementById('addAuthority').value,
+  };
+  const res = await api('/api/offers/add', {method:'POST', body:JSON.stringify(data)});
+  if (res.success) {
+    toast('Offre ajoutée avec succès !');
+    closeModal('addModal');
+    if (typeof loadOffers==='function') loadOffers();
+    if (typeof loadStats==='function') loadStats();
+    ['addTitle','addOrg','addSalary','addDeadline','addDeadlineAO','addUrl','addDesc','addRef','addBudget','addAuthority']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  } else { toast('Erreur lors de l\'ajout','error'); }
+}
+function switchAddTab(tab){
+  document.getElementById('panelManuel').style.display = tab==='manuel' ? '' : 'none';
+  document.getElementById('panelUrl').style.display    = tab==='url'    ? '' : 'none';
+  document.getElementById('addSaveBtn').style.display  = tab==='manuel' ? '' : 'none';
+  document.getElementById('tabManuel').className = 'btn btn-sm ' + (tab==='manuel' ? 'btn-primary' : 'btn-secondary');
+  document.getElementById('tabUrl').className    = 'btn btn-sm ' + (tab==='url'    ? 'btn-primary' : 'btn-secondary');
+}
+
+let _urlOfferData = null;
+async function fetchOfferFromUrl(){
+  const url = document.getElementById('urlOfferInput').value.trim();
+  if(!url){toast('Colle un lien valide','error');return;}
+  document.getElementById('urlErrBox').style.display='none';
+  document.getElementById('urlPreviewBox').style.display='none';
+  document.getElementById('urlSaveBtn').style.display='none';
+  const res = await api('/api/offers/add-from-url',{method:'POST',body:JSON.stringify({url,offer_type:document.getElementById('urlOfferType').value,preview_only:true})});
+  if(res.error){document.getElementById('urlErrBox').textContent='❌ '+res.error;document.getElementById('urlErrBox').style.display='';return;}
+  _urlOfferData = {...res, url, offer_type:document.getElementById('urlOfferType').value};
+  document.getElementById('urlPrevTitle').textContent = res.title||url;
+  document.getElementById('urlPrevOrg').textContent   = res.organization||'Organisation non détectée';
+  document.getElementById('urlPreviewBox').style.display='';
+  document.getElementById('urlSaveBtn').style.display='';
+}
+async function saveOfferFromUrl(){
+  if(!_urlOfferData)return;
+  const res = await api('/api/offers/add-from-url',{method:'POST',body:JSON.stringify(_urlOfferData)});
+  if(res.success){toast('Offre ajoutée depuis le lien !');closeModal('addModal');if(typeof loadOffers==='function')loadOffers();}
+  else toast('Erreur sauvegarde','error');
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

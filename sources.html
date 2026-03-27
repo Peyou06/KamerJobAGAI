@@ -1,0 +1,607 @@
+{% extends "base.html" %}
+{% block title %}Sources — CamerJob Watch{% endblock %}
+{% block page_title %}🌐 Gestion des Sources{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+  <div class="text-muted text-sm" id="srcCount">Chargement...</div>
+  <div class="flex gap-2 flex-wrap">
+    <button class="btn btn-secondary btn-sm" onclick="openModal('addOfferManualModal')">✏️ Offre manuelle</button>
+    <button class="btn btn-secondary btn-sm" onclick="openModal('addOfferUrlModal')">🔗 Offre par lien</button>
+    <button class="btn btn-orange btn-sm" onclick="openModal('bulkParseModal')">📋 Coller une liste</button>
+    <button class="btn btn-primary" onclick="openModal('addSourceModal')">+ Ajouter une source</button>
+    <button class="btn btn-secondary" onclick="scrapeAll()">▶ Tout scraper</button>
+  </div>
+</div>
+
+<div id="sourcesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px"></div>
+
+<!-- Modal source -->
+<div class="modal-overlay" id="addSourceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="srcModalTitle">🌐 Nouvelle source</div>
+      <div class="modal-close" onclick="closeModal('addSourceModal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editSourceId" value="">
+      <div class="form-group">
+        <label class="form-label">Nom de la source *</label>
+        <input id="srcName" class="form-control" placeholder="Ex: Emploi Cameroun">
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL *</label>
+        <input id="srcUrl" class="form-control" placeholder="https://www.exemple.cm/offres">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select id="srcType" class="form-control">
+            <option value="emploi">💼 Offres d'emploi</option>
+            <option value="appel_offre">📋 Appels d'offres</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fréquence (minutes)</label>
+          <select id="srcFreq" class="form-control">
+            <option value="30">30 min</option>
+            <option value="60" selected>1 heure</option>
+            <option value="120">2 heures</option>
+            <option value="240">4 heures</option>
+            <option value="720">12 heures</option>
+            <option value="1440">24 heures</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes / Description</label>
+        <textarea id="srcNotes" class="form-control" rows="2" placeholder="Description de la source..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="flex items-center gap-2" style="cursor:pointer;font-size:14px">
+          <input type="checkbox" id="srcActive" checked> Source active
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addSourceModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSource()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal offre manuelle -->
+<div class="modal-overlay" id="addOfferManualModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Ajouter une offre manuellement</div>
+      <div class="modal-close" onclick="closeModal('addOfferManualModal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Type d'offre</label>
+        <select id="mOfferType" class="form-control" onchange="toggleMFields()">
+          <option value="emploi">💼 Offre d'emploi / Stage</option>
+          <option value="appel_offre">📋 Appel d'offre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Titre *</label>
+        <input id="mTitle" class="form-control" placeholder="Titre du poste ou de l'appel d'offre">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Organisation</label>
+          <input id="mOrg" class="form-control" placeholder="Nom de l'entreprise / institution">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Localisation</label>
+          <select id="mLoc" class="form-control">
+            <option>Cameroun</option><option>Douala</option><option>Yaoundé</option>
+            <option>Bafoussam</option><option>Garoua</option><option>Maroua</option>
+            <option>Bertoua</option><option>Ebolowa</option><option>Ngaoundéré</option>
+            <option>Bamenda</option><option>Buea</option><option>Limbe</option><option>Kribi</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Secteur</label>
+          <select id="mSector" class="form-control">
+            <option value="">-- Secteur --</option>
+            <option>Informatique & Tech</option><option>Finance & Banque</option>
+            <option>Santé</option><option>Éducation</option><option>Génie Civil & BTP</option>
+            <option>Télécoms</option><option>Agriculture</option><option>Transport & Logistique</option>
+            <option>Humanitaire & ONG</option><option>Administration & RH</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type de contrat</label>
+          <select id="mContract" class="form-control">
+            <option value="">-- Type --</option>
+            <option>CDI</option><option>CDD</option><option>Stage</option>
+            <option>Consultant</option><option>Vacataire</option><option>Intérim</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" id="mEmploiRow">
+        <div class="form-group">
+          <label class="form-label">Salaire</label>
+          <input id="mSalary" class="form-control" placeholder="Ex: 300 000 - 500 000 FCFA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date limite</label>
+          <input id="mDeadline" class="form-control" type="date">
+        </div>
+      </div>
+      <div id="mAORows" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Référence</label>
+            <input id="mRef" class="form-control" placeholder="AO/MINTP/2025/001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Budget estimé</label>
+            <input id="mBudget" class="form-control" placeholder="500 000 000 FCFA">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Autorité contractante</label>
+            <input id="mAuthority" class="form-control" placeholder="Ministère, Société...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date limite</label>
+            <input id="mDeadlineAO" class="form-control" type="date">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lien / URL</label>
+        <input id="mUrl" class="form-control" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea id="mDesc" class="form-control" rows="3" placeholder="Description détaillée..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addOfferManualModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="submitManualOffer()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal offre par lien -->
+<div class="modal-overlay" id="addOfferUrlModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔗 Ajouter une offre par lien</div>
+      <div class="modal-close" onclick="closeModal('addOfferUrlModal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Coller le lien de l'offre *</label>
+        <input id="urlOfferSrc" class="form-control" placeholder="https://louma-jobs.com/cameroun/...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type d'offre</label>
+        <select id="urlOfferTypeSrc" class="form-control">
+          <option value="emploi">💼 Emploi / Stage</option>
+          <option value="appel_offre">📋 Appel d'offre</option>
+        </select>
+      </div>
+      <div id="urlPreviewSrc" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-top:10px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px" id="urlPrevTitleSrc"></div>
+        <div class="text-sm text-muted" id="urlPrevOrgSrc"></div>
+        <div class="text-xs text-muted mt-2" id="urlPrevDescSrc" style="line-height:1.5"></div>
+      </div>
+      <div id="urlErrSrc" class="text-red text-sm mt-2" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-secondary btn-sm" onclick="analyzeOfferUrl()">🔍 Analyser le lien</button>
+        <button class="btn btn-primary btn-sm" id="urlSaveSrcBtn" style="display:none" onclick="saveOfferByUrl()">💾 Enregistrer l'offre</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addOfferUrlModal')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal liste groupée WhatsApp/Telegram -->
+<div class="modal-overlay" id="bulkParseModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">📋 Importer une liste d'offres</div>
+      <div class="modal-close" onclick="closeBulkModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Colle ici le message WhatsApp / Telegram / texte groupé</label>
+        <textarea id="bulkText" class="form-control" rows="9"
+          placeholder="Exemple :&#10;✅ *NEPTUNE OIL S.A.* : _07 Postes Ouverts, URGENT_&#10;⏩https://minajobs.net/cm/37226/&#10;✅ *GIZ* : _STAGIAIRE_&#10;⏩https://minajobs.net/cm/40731/"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type d'offre par défaut</label>
+        <select id="bulkType" class="form-control">
+          <option value="emploi">💼 Emploi / Stage</option>
+          <option value="appel_offre">📋 Appel d'offre</option>
+        </select>
+      </div>
+      <div id="bulkPreviewWrap" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="font-semibold text-sm" id="bulkPreviewCount"></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" onclick="checkAllBulk(true)">✅ Tout cocher</button>
+            <button class="btn btn-secondary btn-sm" onclick="checkAllBulk(false)">☐ Tout décocher</button>
+          </div>
+        </div>
+        <div id="bulkPreviewList" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:7px"></div>
+      </div>
+      <div id="bulkErr" class="text-red text-sm mt-2" style="display:none"></div>
+      <div id="bulkResult" style="display:none;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:10px">
+        <div class="font-semibold" id="bulkResultText"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="parseBulk()">🔍 Analyser</button>
+        <button class="btn btn-primary btn-sm" id="bulkImportBtn" style="display:none" onclick="importBulk()">💾 Importer les offres cochées</button>
+        <span id="bulkSpinner" style="display:none;font-size:13px;color:var(--muted)">⏳ Importation...</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeBulkModal()">Fermer</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadSources() {
+  const sources = await api('/api/sources');
+  document.getElementById('srcCount').textContent = `${sources.length} source${sources.length>1?'s':''}`;
+  const g = document.getElementById('sourcesGrid');
+  g.innerHTML = sources.length ? sources.map(s => sourceCard(s)).join('') :
+    `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🌐</div><div class="empty-title">Aucune source</div><p>Ajoutez votre première source de scraping.</p></div>`;
+}
+
+function sourceCard(s) {
+  const lastScrape = s.last_scraped ? new Date(s.last_scraped).toLocaleString('fr-FR') : 'Jamais';
+  const typeLabel = s.source_type==='emploi' ? '💼 Emploi' : "📋 Appel d'offre";
+  const typeBadge = s.source_type==='emploi' ? 'badge-green' : 'badge-orange';
+  return `<div class="card" style="border-left:3px solid ${s.source_type==='emploi'?'var(--green)':'#F97316'}">
+    <div class="flex items-center justify-between mb-3">
+      <div style="font-size:16px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+      <span class="badge ${s.is_active?'badge-green':'badge-gray'}" style="margin-left:8px">${s.is_active?'● Actif':'○ Inactif'}</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🔗 ${s.url}</div>
+    <div class="flex flex-wrap gap-2 mb-3">
+      <span class="badge ${typeBadge}">${typeLabel}</span>
+      <span class="badge badge-gray">⏱ ${s.scrape_freq}min</span>
+      <span class="badge badge-blue">📦 ${s.total_found} offres</span>
+    </div>
+    ${s.notes?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">${s.notes}</div>`:''}
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">🕐 Dernier scraping: ${lastScrape}</div>
+    <div class="flex gap-2 flex-wrap">
+      <button class="btn btn-primary btn-sm" onclick="scrapeSource(${s.id})" id="scrapeBtn-${s.id}">▶ Scraper</button>
+      <button class="btn btn-secondary btn-sm" onclick="editSource(${s.id})">✏️ Modifier</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteSource(${s.id})">🗑 Supprimer</button>
+    </div>
+  </div>`;
+}
+
+async function saveSource() {
+  const eid = document.getElementById('editSourceId').value;
+  const data = {
+    name: document.getElementById('srcName').value.trim(),
+    url: document.getElementById('srcUrl').value.trim(),
+    source_type: document.getElementById('srcType').value,
+    scrape_freq: parseInt(document.getElementById('srcFreq').value),
+    notes: document.getElementById('srcNotes').value,
+    is_active: document.getElementById('srcActive').checked,
+  };
+  if (!data.name || !data.url) { toast('Nom et URL sont obligatoires','error'); return; }
+  if (eid) {
+    await api(`/api/sources/${eid}`, {method:'PUT', body:JSON.stringify(data)});
+    toast('Source modifiée !');
+  } else {
+    await api('/api/sources/add', {method:'POST', body:JSON.stringify(data)});
+    toast('Source ajoutée !');
+  }
+  closeModal('addSourceModal'); loadSources(); resetSrcForm();
+}
+
+async function editSource(id) {
+  const sources = await api('/api/sources');
+  const s = sources.find(x=>x.id===id);
+  if (!s) return;
+  document.getElementById('editSourceId').value = s.id;
+  document.getElementById('srcModalTitle').textContent = '✏️ Modifier la source';
+  document.getElementById('srcName').value = s.name;
+  document.getElementById('srcUrl').value = s.url;
+  document.getElementById('srcType').value = s.source_type;
+  document.getElementById('srcFreq').value = s.scrape_freq;
+  document.getElementById('srcNotes').value = s.notes || '';
+  document.getElementById('srcActive').checked = s.is_active;
+  openModal('addSourceModal');
+}
+
+async function deleteSource(id) {
+  if (!confirm('Supprimer cette source ?')) return;
+  await api(`/api/sources/${id}`, {method:'DELETE'});
+  toast('Source supprimée'); loadSources();
+}
+
+async function scrapeSource(id) {
+  const btn = document.getElementById(`scrapeBtn-${id}`);
+  btn.textContent = '⏳ En cours...'; btn.disabled = true;
+  const r = await api(`/api/sources/${id}/scrape`, {method:'POST'});
+  toast(r.message || 'Scraping lancé');
+  let checks = 0;
+  const poll = setInterval(async () => {
+    const st = await api(`/api/sources/${id}/status`);
+    if (!st.running || checks > 30) {
+      clearInterval(poll); btn.textContent = '▶ Scraper'; btn.disabled = false;
+      toast(st.last_log ? `✅ ${st.last_log.new_items} nouvelles offres trouvées` : 'Terminé');
+      loadSources();
+    }
+    checks++;
+  }, 2000);
+}
+
+async function scrapeAll() {
+  const r = await api('/api/sources/scrape-all', {method:'POST'});
+  toast(r.message); setTimeout(loadSources, 8000);
+}
+
+function resetSrcForm() {
+  document.getElementById('editSourceId').value='';
+  document.getElementById('srcModalTitle').textContent='🌐 Nouvelle source';
+  ['srcName','srcUrl','srcNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('srcType').value='emploi';
+  document.getElementById('srcFreq').value='60';
+  document.getElementById('srcActive').checked=true;
+}
+
+document.getElementById('addSourceModal').addEventListener('click', e=>{
+  if(e.target===document.getElementById('addSourceModal')) {closeModal('addSourceModal');resetSrcForm();}
+});
+
+// ── Offre manuelle ────────────────────────────────────────────────────────────
+function toggleMFields() {
+  const t = document.getElementById('mOfferType').value;
+  document.getElementById('mEmploiRow').style.display = t==='emploi' ? '' : 'none';
+  document.getElementById('mAORows').style.display    = t==='appel_offre' ? '' : 'none';
+}
+
+async function submitManualOffer() {
+  const title = document.getElementById('mTitle').value.trim();
+  if (!title) { toast('Le titre est obligatoire','error'); return; }
+  const type = document.getElementById('mOfferType').value;
+  const deadline = type==='emploi'
+    ? document.getElementById('mDeadline').value
+    : document.getElementById('mDeadlineAO').value;
+  const data = {
+    offer_type: type, title,
+    organization:  document.getElementById('mOrg').value,
+    location:      document.getElementById('mLoc').value,
+    sector:        document.getElementById('mSector').value,
+    contract_type: document.getElementById('mContract').value,
+    salary:        document.getElementById('mSalary').value,
+    deadline,
+    url:           document.getElementById('mUrl').value,
+    description:   document.getElementById('mDesc').value,
+    reference:     document.getElementById('mRef') ? document.getElementById('mRef').value : '',
+    budget:        document.getElementById('mBudget') ? document.getElementById('mBudget').value : '',
+    authority:     document.getElementById('mAuthority') ? document.getElementById('mAuthority').value : '',
+  };
+  const res = await api('/api/offers/add', {method:'POST', body:JSON.stringify(data)});
+  if (res.success) {
+    toast('Offre ajoutée avec succès !');
+    closeModal('addOfferManualModal');
+    ['mTitle','mOrg','mSalary','mDeadline','mDeadlineAO','mUrl','mDesc','mRef','mBudget','mAuthority']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  } else { toast("Erreur lors de l'ajout",'error'); }
+}
+
+// ── Offre par lien ────────────────────────────────────────────────────────────
+let _urlSrcData = null;
+
+async function analyzeOfferUrl() {
+  const url = document.getElementById('urlOfferSrc').value.trim();
+  if (!url) { toast('Colle un lien valide','error'); return; }
+  document.getElementById('urlErrSrc').style.display    = 'none';
+  document.getElementById('urlPreviewSrc').style.display= 'none';
+  document.getElementById('urlSaveSrcBtn').style.display= 'none';
+  const res = await api('/api/offers/add-from-url', {
+    method:'POST',
+    body: JSON.stringify({url, offer_type: document.getElementById('urlOfferTypeSrc').value, preview_only: true})
+  });
+  if (res.error) {
+    document.getElementById('urlErrSrc').textContent = '❌ ' + res.error;
+    document.getElementById('urlErrSrc').style.display = '';
+    return;
+  }
+  _urlSrcData = {...res, url, offer_type: document.getElementById('urlOfferTypeSrc').value};
+  document.getElementById('urlPrevTitleSrc').textContent = res.title || url;
+  document.getElementById('urlPrevOrgSrc').textContent   = res.organization || 'Organisation non détectée';
+  document.getElementById('urlPrevDescSrc').textContent  = res.description ? res.description.substring(0,200) : '';
+  document.getElementById('urlPreviewSrc').style.display = '';
+  document.getElementById('urlSaveSrcBtn').style.display = '';
+}
+
+async function saveOfferByUrl() {
+  if (!_urlSrcData) return;
+  const res = await api('/api/offers/add-from-url', {method:'POST', body:JSON.stringify(_urlSrcData)});
+  if (res.success) {
+    toast('Offre ajoutée depuis le lien !');
+    closeModal('addOfferUrlModal');
+    document.getElementById('urlOfferSrc').value = '';
+    document.getElementById('urlPreviewSrc').style.display = 'none';
+    document.getElementById('urlSaveSrcBtn').style.display = 'none';
+    _urlSrcData = null;
+  } else { toast('Erreur lors de la sauvegarde','error'); }
+}
+
+// ── Import liste groupée (WhatsApp / Telegram) ────────────────────────────────
+let _bulkOffers = [];
+
+function closeBulkModal() {
+  closeModal('bulkParseModal');
+  document.getElementById('bulkText').value = '';
+  document.getElementById('bulkPreviewWrap').style.display = 'none';
+  document.getElementById('bulkImportBtn').style.display = 'none';
+  document.getElementById('bulkErr').style.display = 'none';
+  document.getElementById('bulkResult').style.display = 'none';
+  _bulkOffers = [];
+}
+
+function parseBulk() {
+  const raw  = document.getElementById('bulkText').value.trim();
+  const type = document.getElementById('bulkType').value;
+  if (!raw) { toast('Colle du texte à analyser','error'); return; }
+
+  document.getElementById('bulkErr').style.display = 'none';
+  document.getElementById('bulkResult').style.display = 'none';
+  document.getElementById('bulkImportBtn').style.display = 'none';
+  _bulkOffers = [];
+
+  /* ── Fonctions utilitaires ── */
+  const isUrl  = s => /https?:\/\/\S+/.test(s);
+  const getUrl = s => { const m = s.match(/https?:\/\/\S+/); return m ? m[0].replace(/[.,;)\]>]+$/, '') : ''; };
+
+  // Nettoyer emojis, markdown WhatsApp (*gras*, _italique_), URLs
+  function clean(s) {
+    return s
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/_(.*?)_/g,   '$1')
+      .replace(/~(.*?)~/g,   '$1')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/[✅🆕🔔🛑⏩🇨🇲➡️▶️•·→»«]/gu, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  // Séparer "ORG : TITRE" → {organization, title}
+  function splitOrgTitle(s) {
+    // Essayer "ORG : TITRE"  puis "ORG - TITRE"
+    const m = s.match(/^(.+?)\s*[:–—]\s*(.+)$/);
+    if (m && m[1].length < 80 && m[2].length > 2)
+      return { organization: m[1].trim(), title: m[2].trim() };
+    return { organization: '', title: s };
+  }
+
+  /* ── Lignes d'en-tête à ignorer ── */
+  const SKIP = ['NOUVEAUX','EMPLOIS','STAGES','Détails sur','🗣','🔔','OFFRES DU JOUR'];
+
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Ignorer en-têtes
+    if (SKIP.some(p => line.includes(p)) && !isUrl(line)) { i++; continue; }
+
+    if (isUrl(line)) {
+      // URL seule → attacher à l'offre précédente sans URL
+      if (_bulkOffers.length && !_bulkOffers[_bulkOffers.length-1].url) {
+        _bulkOffers[_bulkOffers.length-1].url = getUrl(line);
+      }
+      i++; continue;
+    }
+
+    // Ligne texte
+    const url = getUrl(line);  // URL inline éventuelle
+    const { organization, title } = splitOrgTitle(clean(line));
+    if (title.length < 3) { i++; continue; }
+
+    const offer = { organization, title, url, offer_type: type };
+
+    // Ligne suivante = URL de cette offre ?
+    if (!url && i+1 < lines.length && isUrl(lines[i+1])) {
+      offer.url = getUrl(lines[i+1]);
+      i++;  // consommer la ligne URL
+    }
+
+    _bulkOffers.push(offer);
+    i++;
+  }
+
+  if (!_bulkOffers.length) {
+    document.getElementById('bulkErr').textContent = '❌ Aucune offre détectée. Vérifie le format.';
+    document.getElementById('bulkErr').style.display = '';
+    return;
+  }
+
+  // ── Aperçu ──
+  document.getElementById('bulkPreviewCount').textContent =
+    `${_bulkOffers.length} offre${_bulkOffers.length>1?'s':''} détectée${_bulkOffers.length>1?'s':''}`;
+
+  document.getElementById('bulkPreviewList').innerHTML = _bulkOffers.map((o,idx) => `
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <input type="checkbox" id="bchk-${idx}" checked style="margin-top:3px;flex-shrink:0;width:16px;height:16px;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;margin-bottom:2px">${o.title||'—'}</div>
+        ${o.organization?`<div style="font-size:12px;color:var(--muted);margin-bottom:2px">🏢 ${o.organization}</div>`:''}
+        ${o.url
+          ? `<div style="font-size:11px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.url}">🔗 ${o.url}</div>`
+          : `<div style="font-size:11px;color:#F97316">⚠️ Pas de lien détecté</div>`}
+      </div>
+      <select onchange="_bulkOffers[${idx}].offer_type=this.value"
+        style="background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:11px;color:var(--text);flex-shrink:0;cursor:pointer">
+        <option value="emploi"      ${o.offer_type==='emploi'?'selected':''}>💼 Emploi</option>
+        <option value="appel_offre" ${o.offer_type==='appel_offre'?'selected':''}>📋 AO</option>
+      </select>
+    </div>`).join('');
+
+  document.getElementById('bulkPreviewWrap').style.display = '';
+  document.getElementById('bulkImportBtn').style.display   = '';
+}
+
+function checkAllBulk(state) {
+  _bulkOffers.forEach((_,idx) => { const cb=document.getElementById(`bchk-${idx}`); if(cb) cb.checked=state; });
+}
+
+async function importBulk() {
+  const selected = _bulkOffers.filter((_,idx) => {
+    const cb = document.getElementById(`bchk-${idx}`); return cb && cb.checked;
+  });
+  if (!selected.length) { toast('Coche au moins une offre','error'); return; }
+
+  document.getElementById('bulkImportBtn').style.display = 'none';
+  document.getElementById('bulkSpinner').style.display   = '';
+
+  let ok=0, fail=0;
+  for (const o of selected) {
+    try {
+      const res = await api('/api/offers/add', {
+        method:'POST',
+        body: JSON.stringify({
+          offer_type:   o.offer_type || 'emploi',
+          title:        o.title,
+          organization: o.organization || '',
+          location:     'Cameroun',
+          url:          o.url || '',
+          source_name:  'Import groupé',
+          description:  '',
+          sector:       '',
+        })
+      });
+      res.success ? ok++ : fail++;
+    } catch { fail++; }
+  }
+
+  document.getElementById('bulkSpinner').style.display   = 'none';
+  document.getElementById('bulkImportBtn').style.display = '';
+
+  const msg = `✅ ${ok} importée${ok>1?'s':''}${fail?'  ❌ '+fail+' échec(s)':''}`;
+  document.getElementById('bulkResultText').textContent = msg;
+  document.getElementById('bulkResult').style.display   = '';
+  if (ok)   toast(`${ok} offre${ok>1?'s':''} importée${ok>1?'s':''}!`);
+  if (fail) toast(`${fail} échec(s)`,'error');
+}
+
+loadSources();
+</script>
+{% endblock %}

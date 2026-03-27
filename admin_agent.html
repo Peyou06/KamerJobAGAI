@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% block title %}Admin Agent IA{% endblock %}
+{% block page_title %}🛡️ Administration Agent IA{% endblock %}
+
+{% block head %}
+<style>
+.aw{max-width:980px;margin:0 auto}
+.fb{border-radius:8px;padding:10px 13px;font-size:13px;margin-top:9px;line-height:1.6;display:none;white-space:pre-line}
+.fb-ok{background:rgba(0,165,80,.08);border:1px solid rgba(0,165,80,.3);color:var(--accent)}
+.fb-err{background:rgba(206,17,38,.06);border:1px solid rgba(206,17,38,.3);color:#EF4444}
+.cb{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700;display:inline-block}
+.cb-ok{background:rgba(0,165,80,.15);color:var(--accent)}.cb-no{background:rgba(128,128,128,.1);color:var(--muted)}
+.cb-adm{background:rgba(249,115,22,.15);color:#F97316}
+.sm{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px;text-align:center}
+.sm-n{font-size:24px;font-weight:800;line-height:1}.sm-l{font-size:10px;color:var(--muted);margin-top:2px}
+/* Login admin */
+.login-box{max-width:400px;margin:40px auto}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="aw">
+
+<!-- Auth admin -->
+<div id="sec-login">
+  <div class="login-box card">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">🛡️</div>
+      <div style="font-size:18px;font-weight:800">Espace Admin</div>
+      <div class="text-sm text-muted mt-2">Réservé aux comptes administrateurs</div>
+    </div>
+    <div class="form-group"><label class="form-label">Email Admin</label>
+      <input id="aEmail" class="form-control" type="email" placeholder="admin@email.com"
+             onkeydown="if(event.key==='Enter')doAdminLogin()"></div>
+    <div class="form-group"><label class="form-label">Mot de passe</label>
+      <input id="aPwd" class="form-control" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')doAdminLogin()"></div>
+    <div id="fbLogin" class="fb fb-err"></div>
+    <button class="btn btn-primary w-full mt-3" onclick="doAdminLogin()">🔐 Se connecter</button>
+    <div class="text-xs text-muted mt-3" style="text-align:center">
+      Pas encore de compte ? <a href="/agent" style="color:var(--accent)">Créer un compte sur /agent</a><br>
+      <em>Le premier compte créé devient automatiquement Admin</em>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard admin -->
+<div id="sec-admin" style="display:none">
+
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <div>
+      <div style="font-size:18px;font-weight:800">🛡️ Administration — <span id="adminName"></span></div>
+      <div class="text-sm text-muted" id="adminEmail"></div>
+    </div>
+    <div class="flex gap-2">
+      <a href="/agent" class="btn btn-secondary btn-sm">🤖 Mon Agent</a>
+      <button class="btn btn-secondary btn-sm" onclick="doAdminLogout()">🚪 Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px">
+    <div class="sm"><div class="sm-n" id="asT">—</div><div class="sm-l">Utilisateurs</div></div>
+    <div class="sm"><div class="sm-n" style="color:var(--accent)" id="asG">—</div><div class="sm-l">Gmail OK</div></div>
+    <div class="sm"><div class="sm-n" style="color:#3B82F6" id="asA">—</div><div class="sm-l">API OK</div></div>
+    <div class="sm"><div class="sm-n" style="color:#F97316" id="asC">—</div><div class="sm-l">Candidatures</div></div>
+  </div>
+
+  <!-- Tableau utilisateurs -->
+  <div class="card mb-4">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-bold" style="font-size:15px">👥 Tous les utilisateurs Agent IA</div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-sm" onclick="loadUsers()">🔄 Actualiser</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📊 CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Nom</th><th>Email</th><th>Rôle</th><th>Gmail</th><th>API</th><th>Secteurs</th><th>Cand.</th><th>Inscrit</th><th>Actions</th></tr></thead>
+        <tbody id="usersBody"><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">Chargement...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Envoi offres ciblées -->
+  <div class="card">
+    <div class="font-bold mb-3" style="font-size:15px">📨 Envoyer des offres ciblées</div>
+    <div class="text-sm text-muted mb-3">Les emails seront envoyés depuis votre Gmail Admin (configuré dans votre profil Agent).</div>
+
+    <div id="fb-gmail-admin" class="fb fb-err" style="margin-bottom:12px"></div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Destinataires</label>
+        <select id="target" class="form-control" onchange="onTarget()">
+          <option value="all">Tous les utilisateurs</option>
+          <option value="sector:Informatique & Tech">Secteur : Informatique & Tech</option>
+          <option value="sector:Finance & Banque">Secteur : Finance & Banque</option>
+          <option value="sector:Santé">Secteur : Santé</option>
+          <option value="sector:Génie Civil & BTP">Secteur : Génie Civil & BTP</option>
+          <option value="sector:Humanitaire & ONG">Secteur : Humanitaire & ONG</option>
+          <option value="sector:Éducation">Secteur : Éducation</option>
+          <option value="sector:Administration & RH">Secteur : Administration & RH</option>
+          <option value="sector:Télécoms">Secteur : Télécoms</option>
+          <option value="user:">Utilisateur spécifique</option>
+        </select>
+      </div>
+      <div class="form-group" id="userIdRow" style="display:none">
+        <label class="form-label">ID de l'utilisateur</label>
+        <input id="userId" class="form-control" type="number" placeholder="Ex: 3">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Offres à envoyer</label>
+      <select id="offerMode" class="form-control" onchange="onOfferMode()">
+        <option value="recent">10 dernières offres collectées</option>
+        <option value="sector">Par secteur</option>
+        <option value="ids">IDs spécifiques</option>
+      </select>
+    </div>
+    <div class="form-group" id="ofSecRow" style="display:none">
+      <label class="form-label">Secteur des offres</label>
+      <select id="ofSec" class="form-control">
+        <option value="">Tous</option>
+        <option>Informatique & Tech</option><option>Finance & Banque</option>
+        <option>Santé</option><option>Génie Civil & BTP</option>
+        <option>Humanitaire & ONG</option><option>Éducation</option>
+        <option>Administration & RH</option><option>Télécoms</option>
+      </select>
+    </div>
+    <div class="form-group" id="ofIdsRow" style="display:none">
+      <label class="form-label">IDs des offres (séparés par virgules)</label>
+      <input id="ofIds" class="form-control" placeholder="Ex: 1, 5, 12, 23">
+    </div>
+
+    <div class="flex gap-2">
+      <button class="btn btn-primary" id="sendBtn" onclick="doSend()">📨 Envoyer les emails</button>
+    </div>
+    <div id="fb-send" class="fb"></div>
+
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="font-semibold mb-2" style="font-size:13px">📋 Historique des envois</div>
+      <div id="envoisLog" class="text-sm text-muted">Chargement...</div>
+    </div>
+  </div>
+
+</div><!-- /sec-admin -->
+</div><!-- /aw -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Utilise api() définie dans base.html */
+let _admin=null, _users=[];
+
+async function initAdmin(){
+  const r=await api('/api/agent/me');
+  if(r.auth && r.user.role==='admin'){
+    _admin=r.user;
+    document.getElementById('sec-login').style.display='none';
+    document.getElementById('sec-admin').style.display='';
+    document.getElementById('adminName').textContent=r.user.name;
+    document.getElementById('adminEmail').textContent=r.user.email;
+    loadUsers();
+  } else {
+    document.getElementById('sec-login').style.display='';
+    document.getElementById('sec-admin').style.display='none';
+  }
+}
+
+async function doAdminLogin(){
+  document.getElementById('fbLogin').style.display='none';
+  const email=document.getElementById('aEmail').value.trim();
+  const pwd=document.getElementById('aPwd').value;
+  if(!email||!pwd){
+    document.getElementById('fbLogin').textContent='Remplissez tous les champs';
+    document.getElementById('fbLogin').style.display=''; return;
+  }
+  const r=await api('/api/agent/login',{method:'POST',body:JSON.stringify({email,password:pwd})});
+  if(!r.ok){
+    document.getElementById('fbLogin').textContent=r.err||'Erreur de connexion';
+    document.getElementById('fbLogin').style.display=''; return;
+  }
+  if(r.role!=='admin'){
+    document.getElementById('fbLogin').textContent='Ce compte n\'a pas les droits admin. Connectez-vous avec un compte admin.';
+    document.getElementById('fbLogin').style.display=''; return;
+  }
+  initAdmin();
+}
+
+async function doAdminLogout(){
+  await api('/api/agent/logout',{method:'POST'});
+  _admin=null;
+  document.getElementById('sec-admin').style.display='none';
+  document.getElementById('sec-login').style.display='';
+  toast('Déconnexion réussie');
+}
+
+async function loadUsers(){
+  const r=await api('/api/admin/users');
+  if(!r.ok && r.err){toast(r.err,'error');return;}
+  _users=Array.isArray(r)?r:[];
+  document.getElementById('asT').textContent=_users.length;
+  document.getElementById('asG').textContent=_users.filter(u=>u.gmail_verified).length;
+  document.getElementById('asA').textContent=_users.filter(u=>u.api_verified).length;
+  document.getElementById('asC').textContent=_users.reduce((s,u)=>s+(u.nb||0),0);
+  if(!_users.length){
+    document.getElementById('usersBody').innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">Aucun utilisateur inscrit</td></tr>';
+    return;
+  }
+  document.getElementById('usersBody').innerHTML=_users.map(u=>`
+    <tr>
+      <td class="text-muted">${u.id}</td>
+      <td style="font-weight:600">${u.name}</td>
+      <td style="font-family:monospace;font-size:12px">${u.email}</td>
+      <td>${u.role==='admin'?'<span class="cb cb-adm">🛡️ Admin</span>':'<span class="cb cb-no">User</span>'}</td>
+      <td>${u.gmail_verified?'<span class="cb cb-ok">✅</span>':'<span class="cb cb-no">—</span>'}</td>
+      <td>${u.api_verified?'<span class="cb cb-ok">✅</span>':'<span class="cb cb-no">—</span>'}</td>
+      <td class="text-xs text-muted" style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${(u.sectors||'—').slice(0,50)}</td>
+      <td style="text-align:center;font-weight:700">${u.nb||0}</td>
+      <td class="text-xs text-muted">${(u.created_at||'').slice(0,10)}</td>
+      <td>
+        <div class="flex gap-1">
+          <button class="btn btn-secondary btn-sm" onclick="sendTo(${u.id})" title="Envoyer des offres">📨</button>
+          ${u.role==='user'?`<button class="btn btn-secondary btn-sm" onclick="promote(${u.id},'admin')" title="Promouvoir admin">⬆️</button>`:`<button class="btn btn-secondary btn-sm" onclick="promote(${u.id},'user')" title="Rétrograder">⬇️</button>`}
+          ${u.id!==(_admin&&_admin.id)?`<button class="btn btn-danger btn-sm" onclick="delUser(${u.id})" title="Supprimer">🗑</button>`:''}
+        </div>
+      </td>
+    </tr>`).join('');
+  loadEnvois();
+}
+
+function sendTo(id){
+  document.getElementById('target').value='user:';
+  document.getElementById('userIdRow').style.display='';
+  document.getElementById('userId').value=id;
+  document.getElementById('sendBtn').scrollIntoView({behavior:'smooth'});
+}
+
+async function promote(id,role){
+  const label=role==='admin'?'promouvoir admin':'rétrograder user';
+  if(!confirm(`${label} cet utilisateur ?`))return;
+  const r=await api('/api/admin/promote',{method:'POST',body:JSON.stringify({user_id:id,role})});
+  if(r.ok){toast('Rôle mis à jour');loadUsers();}
+  else toast(r.err||'Erreur','error');
+}
+
+async function delUser(id){
+  if(!confirm('Supprimer cet utilisateur et toutes ses données ?'))return;
+  const r=await api('/api/admin/delete-user',{method:'POST',body:JSON.stringify({user_id:id})});
+  if(r.ok){toast('Utilisateur supprimé');loadUsers();}
+  else toast(r.err||'Erreur','error');
+}
+
+function onTarget(){
+  document.getElementById('userIdRow').style.display=
+    document.getElementById('target').value==='user:'?'':'none';
+}
+function onOfferMode(){
+  const v=document.getElementById('offerMode').value;
+  document.getElementById('ofSecRow').style.display=v==='sector'?'':'none';
+  document.getElementById('ofIdsRow').style.display=v==='ids'?'':'none';
+}
+
+async function doSend(){
+  // Vérifier que l'admin a Gmail configuré
+  if(!_admin||!_admin.gmail_ok){
+    const fbg=document.getElementById('fb-gmail-admin');
+    fbg.textContent='⚠️ Configurez et testez votre Gmail dans votre profil Agent avant d\'envoyer des emails. Allez sur /agent → Configuration → Gmail.';
+    fbg.style.display=''; return;
+  }
+  let target=document.getElementById('target').value;
+  if(target==='user:') target='user:'+document.getElementById('userId').value;
+  const mode=document.getElementById('offerMode').value;
+  const payload={target};
+  if(mode==='sector') payload.sector_filter=document.getElementById('ofSec').value;
+  if(mode==='ids') payload.offer_ids=document.getElementById('ofIds').value.split(',').map(x=>parseInt(x.trim())).filter(Boolean);
+  const btn=document.getElementById('sendBtn');
+  btn.textContent='⏳ Envoi...'; btn.disabled=true;
+  const r=await api('/api/admin/send-bulk',{method:'POST',body:JSON.stringify(payload)});
+  btn.textContent='📨 Envoyer les emails'; btn.disabled=false;
+  const fb=document.getElementById('fb-send');
+  fb.className='fb '+(r.ok?'fb-ok':'fb-err');
+  fb.textContent=r.ok?r.message+(r.errors?.length?'\n⚠️ Erreurs: '+r.errors.join(', '):''):r.err||'Erreur';
+  fb.style.display='';
+  if(r.ok){toast(r.message);loadEnvois();}
+}
+
+async function loadEnvois(){
+  const r=await api('/api/admin/envois');
+  if(!Array.isArray(r)||!r.length){document.getElementById('envoisLog').textContent='Aucun envoi effectué';return;}
+  document.getElementById('envoisLog').innerHTML=r.map(e=>`
+    <div class="flex gap-3 items-center" style="padding:6px 0;border-bottom:1px solid rgba(128,128,128,.07)">
+      <span>${e.statut==='ok'?'✅':'⚠️'}</span>
+      <span style="flex:1">${e.sujet||'—'}</span>
+      <span class="text-muted">${e.nb_dest} dest.</span>
+      <span class="text-muted text-xs">${(e.sent_at||'').slice(0,16)}</span>
+    </div>`).join('');
+}
+
+function exportCSV(){
+  if(!_users.length){toast('Aucun utilisateur','error');return;}
+  const rows=[['ID','Nom','Email','Rôle','Gmail OK','API OK','Secteurs','Candidatures','Inscrit le']];
+  _users.forEach(u=>rows.push([u.id,u.name,u.email,u.role,u.gmail_verified?'Oui':'Non',u.api_verified?'Oui':'Non',u.sectors||'',u.nb||0,(u.created_at||'').slice(0,10)]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='agent_users.csv'; a.click(); toast('CSV exporté !');
+}
+
+initAdmin();
+</script>
+{% endblock %}

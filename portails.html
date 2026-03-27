@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Portails Emploi — CamerJob Watch{% endblock %}
+{% block page_title %}🔗 Portails Emploi{% endblock %}
+
+{% block head %}
+<style>
+.portail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px}
+.portail-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;transition:all .2s;position:relative}
+.portail-card:hover{border-color:var(--accent);box-shadow:0 4px 20px var(--shadow);transform:translateY(-2px)}
+.pc-top{display:flex;align-items:flex-start;gap:12px}
+.pc-fav{width:42px;height:42px;border-radius:10px;background:var(--card2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden}
+.pc-fav img{width:100%;height:100%;object-fit:cover;border-radius:9px}
+.pc-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.pc-url{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.pc-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.pc-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;opacity:0;transition:opacity .2s}
+.portail-card:hover .pc-del{opacity:.6}
+.pc-del:hover{opacity:1;color:#EF4444}
+.cat-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.cat-pill{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:all .2s}
+.cat-pill:hover,.cat-pill.on{background:var(--green);color:#fff;border-color:var(--green)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <div>
+    <div class="font-bold" style="font-size:18px">Accès direct aux portails</div>
+    <div class="text-sm text-muted mt-2">Ouvre n'importe quel site emploi en un clic — ajoute tes propres portails</div>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('addPortailModal')">+ Ajouter un portail</button>
+</div>
+
+<div class="cat-bar" id="catBar"></div>
+<div class="portail-grid" id="portailGrid">
+  <div class="text-muted text-sm">Chargement...</div>
+</div>
+
+<!-- MODAL AJOUT PORTAIL -->
+<div class="modal-overlay" id="addPortailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔗 Ajouter un portail</div>
+      <div class="modal-close" onclick="closeModal('addPortailModal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Nom du site *</label><input id="pName" class="form-control" placeholder="Ex: MonJobCameroun"></div>
+      <div class="form-group"><label class="form-label">URL *</label><input id="pUrl" class="form-control" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Catégorie</label>
+        <select id="pCat" class="form-control"><option>Emploi</option><option>Concours</option><option>Appel d'offre</option><option>ONG/ONU</option><option>Stage</option><option>Bourse</option><option>Autre</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Description</label><input id="pDesc" class="form-control" placeholder="Brève description..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addPortailModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="addPortail()">💾 Ajouter</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CAT_ICONS={'Emploi':'💼','Concours':'🎓',"Appel d'offre":'📋','ONG/ONU':'🌍','Stage':'🎒','Bourse':'🏅','Autre':'🔗'};
+let portails=[], currentCat='Tous';
+
+async function loadPortails(){
+  portails = await api('/api/portails');
+  renderCats(); renderCards();
+}
+
+function renderCats(){
+  const cats=['Tous',...new Set(portails.map(p=>p.category))];
+  document.getElementById('catBar').innerHTML = cats.map(c=>
+    `<div class="cat-pill ${c===currentCat?'on':''}" onclick="filterCat('${c}')">${CAT_ICONS[c]||'🔗'} ${c} <span style="opacity:.6">${c==='Tous'?portails.length:portails.filter(p=>p.category===c).length}</span></div>`
+  ).join('');
+}
+
+function filterCat(cat){currentCat=cat;renderCats();renderCards();}
+
+function renderCards(){
+  const list = currentCat==='Tous' ? portails : portails.filter(p=>p.category===currentCat);
+  if(!list.length){
+    document.getElementById('portailGrid').innerHTML='<div class="empty-state"><div class="empty-icon">🌐</div><div class="empty-title">Aucun portail</div><div class="text-muted text-sm">Ajoute des portails avec le bouton ci-dessus</div></div>';
+    return;
+  }
+  document.getElementById('portailGrid').innerHTML = list.map(p=>{
+    let domain='';try{domain=new URL(p.url).hostname;}catch{}
+    const ico = CAT_ICONS[p.category]||'🔗';
+    return `<div class="portail-card">
+      <button class="pc-del" onclick="delPortail(${p.id})" title="Supprimer">✕</button>
+      <div class="pc-top">
+        <div class="pc-fav">${domain?`<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" onerror="this.parentNode.textContent='${ico}'">`:`${ico}`}</div>
+        <div style="min-width:0;flex:1">
+          <div class="pc-name">${p.name}</div>
+          <div class="pc-url">${p.url}</div>
+        </div>
+      </div>
+      ${p.description?`<div class="pc-desc">${p.description}</div>`:''}
+      <div class="flex items-center gap-2">
+        <span class="badge badge-${p.category==='Emploi'?'green':p.category==='ONG/ONU'?'blue':'gray'}">${ico} ${p.category}</span>
+      </div>
+      <a href="${p.url}" target="_blank" class="btn btn-primary w-full" style="justify-content:center">🚀 Ouvrir le site</a>
+    </div>`;
+  }).join('');
+}
+
+async function addPortail(){
+  const name=document.getElementById('pName').value.trim();
+  const url=document.getElementById('pUrl').value.trim();
+  if(!name||!url){toast('Nom et URL obligatoires','error');return;}
+  const res=await api('/api/portails/add',{method:'POST',body:JSON.stringify({name,url,category:document.getElementById('pCat').value,description:document.getElementById('pDesc').value})});
+  if(res.success){
+    toast('Portail ajouté !');
+    closeModal('addPortailModal');
+    document.getElementById('pName').value='';document.getElementById('pUrl').value='';document.getElementById('pDesc').value='';
+    loadPortails();
+  } else toast('Erreur','error');
+}
+
+async function delPortail(id){
+  if(!confirm('Supprimer ce portail ?'))return;
+  const res=await api(`/api/portails/${id}`,{method:'DELETE'});
+  if(res.success){toast('Portail supprimé');loadPortails();}
+  else toast('Erreur','error');
+}
+
+loadPortails();
+</script>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Paramètres — CamerJob Watch{% endblock %}
+{% block page_title %}⚙️ Paramètres{% endblock %}
+
+{% block content %}
+<div style="max-width:720px">
+
+  <!-- Licence -->
+  <div class="card mb-4">
+    <div class="flex items-center gap-3 mb-4">
+      <div style="width:60px;height:60px;background:var(--green);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0">🇨🇲</div>
+      <div>
+        <div class="font-bold" style="font-size:20px">CamerJob Watch</div>
+        <div class="text-sm text-muted">Plateforme de veille emploi & marchés publics — Cameroun</div>
+      </div>
+      <span class="badge badge-green" style="margin-left:auto;font-size:12px">v2.0</span>
+    </div>
+
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:14px">
+      <div class="text-xs text-muted mb-3" style="text-transform:uppercase;letter-spacing:1px;font-weight:700">📜 LICENCE D'UTILISATION</div>
+      <div class="font-bold mb-2">Licence usage personnel et professionnel</div>
+      <div class="text-sm text-muted mb-4">Cette application peut être utilisée librement au sein d'une organisation sur réseau local (LAN). Toute redistribution ou commercialisation sans autorisation est interdite.</div>
+      <div class="grid-2">
+        <div><div class="text-xs text-muted mb-1">👨‍💻 DÉVELOPPEUR</div><div class="font-semibold">Peyou Said</div></div>
+        <div><div class="text-xs text-muted mb-1">📅 VERSION</div><div class="font-semibold">2.0 — LAN Edition</div></div>
+        <div><div class="text-xs text-muted mb-1">🌍 MARCHÉ CIBLE</div><div class="font-semibold">Cameroun</div></div>
+        <div><div class="text-xs text-muted mb-1">⚖️ DROITS</div><div class="font-semibold">© Peyou Said 2025–2026</div></div>
+      </div>
+    </div>
+    <div class="text-xs text-muted" style="background:var(--card2);border-radius:8px;padding:12px;line-height:1.7">
+      ⚖️ Les données collectées proviennent de sites publics accessibles en ligne. CamerJob Watch ne stocke pas de données personnelles d'utilisateurs.
+    </div>
+  </div>
+
+  <!-- Thème -->
+  <div class="card mb-4">
+    <div class="font-bold mb-4" style="font-size:15px">🎨 Thème de l'interface</div>
+    <div id="themeCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px"></div>
+  </div>
+
+  <!-- Base de données -->
+  <div class="card mb-4">
+    <div class="font-bold mb-3" style="font-size:15px">🗄️ Base de données</div>
+    <div id="dbStats" class="text-sm text-muted mb-4">Chargement...</div>
+    <button class="btn btn-danger btn-sm" onclick="resetDB()">🗑️ Réinitialiser les offres</button>
+    <div class="text-xs text-muted mt-2">⚠️ Supprime les offres collectées mais conserve les sources et portails.</div>
+  </div>
+
+  <!-- Réseau LAN -->
+  <div class="card mb-4">
+    <div class="font-bold mb-3" style="font-size:15px">📡 Accès réseau local (LAN)</div>
+    <div class="text-sm text-muted mb-3">Accessible depuis tous les appareils connectés au même réseau Wi-Fi ou câble.</div>
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px">
+      <div class="text-xs text-muted mb-2">ADRESSE DE PARTAGE</div>
+      <div class="font-bold" style="font-size:15px;font-family:monospace">http://[VOTRE-IP]:5000</div>
+      <div class="text-xs text-muted mt-2">Lancez app.py et partagez cette adresse avec vos collègues</div>
+    </div>
+  </div>
+
+  <!-- À propos -->
+  <div class="card">
+    <div class="font-bold mb-3" style="font-size:15px">ℹ️ À propos</div>
+    <div class="text-sm text-muted" style="line-height:1.8">
+      <strong>CamerJob Watch</strong> est une plateforme de veille dédiée au marché de l'emploi et des marchés publics au Cameroun.<br><br>
+      Elle collecte automatiquement les offres depuis des dizaines de sites camerounais, les organise par secteur et ville, et permet de les exporter en Excel.<br><br>
+      <strong>Fonctionnalités :</strong><br>
+      • Scraping automatique de 10+ sites d'emploi camerounais<br>
+      • Détection JavaScript (Playwright) pour les sites dynamiques<br>
+      • Ajout manuel d'offres ou via un simple lien URL<br>
+      • Export Excel professionnel (3 feuilles)<br>
+      • Accès direct aux portails emploi camerounais<br>
+      • Créateur de CV avec export HTML / impression PDF<br>
+      • Interface multi-thèmes, déploiement LAN sans configuration<br><br>
+      Développé avec ❤️ par <strong>Peyou Said</strong> pour le marché camerounais.
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const THEME_CFG = [
+  {id:'dark',  ico:'🌙', label:'Sombre',  bg:'#161B22', bd:'#2A3240'},
+  {id:'light', ico:'☀️', label:'Clair',   bg:'#FFFFFF', bd:'#DDE3EC'},
+  {id:'green', ico:'🌿', label:'Forêt',   bg:'#0C2218', bd:'#00C962'},
+  {id:'blue',  ico:'🌊', label:'Océan',   bg:'#101828', bd:'#3B82F6'},
+  {id:'sepia', ico:'📜', label:'Sépia',   bg:'#FDF6E3', bd:'#D5C4A1'},
+];
+
+function renderThemeCards(){
+  const cur = localStorage.getItem('camerajob_theme')||'sepia';
+  document.getElementById('themeCards').innerHTML = THEME_CFG.map(t=>`
+    <div onclick="setTheme('${t.id}')" style="border:2px solid ${t.id===cur?'var(--accent)':'var(--border)'};border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;text-align:center" id="tc${t.id}">
+      <div style="width:100%;height:26px;border-radius:6px;background:${t.bg};border:1px solid ${t.bd};margin-bottom:8px"></div>
+      <div class="font-semibold text-sm">${t.ico} ${t.label}</div>
+    </div>`).join('');
+}
+
+// Surcharger setTheme pour aussi mettre à jour les cartes
+const _origSet = window.setTheme;
+window.setTheme = function(t){
+  if(_origSet) _origSet(t);
+  THEME_CFG.forEach(th=>{
+    const el=document.getElementById('tc'+th.id);
+    if(el)el.style.border=`2px solid ${t===th.id?'var(--accent)':'var(--border)'}`;
+  });
+};
+
+async function loadDbStats(){
+  try{
+    const s = await api('/api/stats');
+    document.getElementById('dbStats').innerHTML=`
+      <div class="grid-3" style="gap:10px">
+        <div class="card-sm" style="text-align:center"><div class="font-bold" style="font-size:22px">${s.total}</div><div class="text-xs text-muted">Total offres</div></div>
+        <div class="card-sm" style="text-align:center"><div class="font-bold" style="font-size:22px">${s.emploi}</div><div class="text-xs text-muted">Emplois</div></div>
+        <div class="card-sm" style="text-align:center"><div class="font-bold" style="font-size:22px">${s.appel_offre}</div><div class="text-xs text-muted">Appels d'offres</div></div>
+      </div>`;
+  } catch {document.getElementById('dbStats').textContent='Erreur chargement';}
+}
+
+async function resetDB(){
+  if(!confirm('Supprimer toutes les offres collectées ? Les sources et portails seront conservés.'))return;
+  const r = await api('/api/db/reset-offers',{method:'POST'});
+  if(r.success){toast('Offres réinitialisées');loadDbStats();}
+  else toast('Erreur','error');
+}
+
+renderThemeCards();
+loadDbStats();
+</script>
+{% endblock %}

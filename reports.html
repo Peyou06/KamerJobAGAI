@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Rapports — CamerJob Watch{% endblock %}
+{% block page_title %}📈 Rapports & Export{% endblock %}
+
+{% block content %}
+<!-- Export cards -->
+<div class="grid-3 mb-6" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
+  <div class="card" style="border-top:3px solid var(--green)">
+    <div style="font-size:32px;margin-bottom:12px">📊</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px">Toutes les offres</div>
+    <p class="text-muted text-sm mb-4">Export complet de toutes les offres d'emploi et appels d'offres avec 3 feuilles (Offres, AO détaillés, Statistiques)</p>
+    <button class="btn btn-primary w-full" onclick="doExport('')">📥 Exporter en Excel</button>
+  </div>
+  <div class="card" style="border-top:3px solid #3B82F6">
+    <div style="font-size:32px;margin-bottom:12px">💼</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px">Offres d'emploi</div>
+    <p class="text-muted text-sm mb-4">Export uniquement des offres d'emploi, triées par date de collecte.</p>
+    <button class="btn btn-secondary w-full" onclick="doExport('emploi')">📥 Exporter en Excel</button>
+  </div>
+  <div class="card" style="border-top:3px solid #F97316">
+    <div style="font-size:32px;margin-bottom:12px">📋</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:8px">Appels d'offres</div>
+    <p class="text-muted text-sm mb-4">Export des appels d'offres avec références, autorités contractantes et budgets.</p>
+    <button class="btn btn-orange w-full" onclick="doExport('appel_offre')">📥 Exporter en Excel</button>
+  </div>
+</div>
+
+<!-- Filtered export -->
+<div class="card mb-6">
+  <div style="font-size:16px;font-weight:700;margin-bottom:16px">🔍 Export filtré</div>
+  <div class="flex flex-wrap gap-3 items-end">
+    <div class="form-group" style="margin:0;min-width:160px">
+      <label class="form-label">Type</label>
+      <select id="expType" class="form-control"><option value="">Tous</option><option value="emploi">Emploi</option><option value="appel_offre">Appels d'offres</option></select>
+    </div>
+    <div class="form-group" style="margin:0;min-width:180px">
+      <label class="form-label">Secteur</label>
+      <select id="expSector" class="form-control">
+        <option value="">Tous secteurs</option>
+        <option>Informatique & Tech</option><option>Finance & Banque</option><option>Santé</option>
+        <option>Éducation</option><option>Génie Civil & BTP</option><option>Télécoms</option>
+        <option>Agriculture</option><option>Humanitaire & ONG</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;flex:1;min-width:160px">
+      <label class="form-label">Mot-clé</label>
+      <input id="expQ" class="form-control" placeholder="Ex: ingénieur, ARMP...">
+    </div>
+    <button class="btn btn-primary" onclick="doFilteredExport()">📥 Exporter Excel filtré</button>
+  </div>
+</div>
+
+<!-- Stats Dashboard -->
+<div class="grid-2 mb-6">
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">📊 Répartition par type</div>
+    <canvas id="typeChart" height="180"></canvas>
+  </div>
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">🏙 Top villes</div>
+    <div id="citiesStats"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">🏷 Top secteurs</div>
+    <div id="sectorsStats"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px">📅 Activité 7 jours</div>
+    <canvas id="activityChart" height="180"></canvas>
+  </div>
+</div>
+
+<!-- Scrape log table -->
+<div class="card">
+  <div style="font-size:15px;font-weight:700;margin-bottom:16px">📋 Journal des activités récentes</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Source</th><th>Statut</th><th>Trouvées</th><th>Nouvelles</th><th>Message</th><th>Date</th></tr></thead>
+      <tbody id="logsTable"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+function doExport(type) {
+  const url = type ? `/api/export/excel?type=${type}` : '/api/export/excel';
+  window.location = url;
+  toast('📥 Export Excel en cours de téléchargement...');
+}
+function doFilteredExport() {
+  const p = new URLSearchParams({
+    type: document.getElementById('expType').value,
+    sector: document.getElementById('expSector').value,
+    q: document.getElementById('expQ').value,
+  });
+  ['type','sector','q'].forEach(k=>{ if(!p.get(k)) p.delete(k); });
+  window.location = `/api/export/excel?${p}`;
+  toast('📥 Export filtré en cours...');
+}
+
+async function loadReports() {
+  const d = await api('/api/stats');
+
+  // Type chart
+  new Chart(document.getElementById('typeChart'), {
+    type: 'pie',
+    data: {
+      labels: ["Offres d'emploi", "Appels d'offres"],
+      datasets: [{data:[d.emploi, d.appel_offre], backgroundColor:['#00A550','#F97316'], borderWidth:0}]
+    },
+    options: {plugins:{legend:{position:'bottom',labels:{color:'#8B949E',font:{size:12}}}}}
+  });
+
+  // Activity chart
+  new Chart(document.getElementById('activityChart'), {
+    type: 'line',
+    data: {
+      labels: d.daily.map(x=>x.date),
+      datasets: [{label:'Offres',data:d.daily.map(x=>x.count),
+        borderColor:'#00A550',backgroundColor:'rgba(0,165,80,.1)',tension:.4,fill:true,pointBackgroundColor:'#00A550'}]
+    },
+    options: {plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8B949E'},grid:{display:false}},y:{ticks:{color:'#8B949E'},grid:{color:'rgba(255,255,255,.05)'}}}}
+  });
+
+  // Cities
+  const max_c = Math.max(...d.locations.map(x=>x.count),1);
+  document.getElementById('citiesStats').innerHTML = d.locations.map(l=>`
+    <div style="margin-bottom:10px">
+      <div class="flex justify-between" style="font-size:13px;margin-bottom:4px"><span>${l.name}</span><span class="text-muted">${l.count}</span></div>
+      <div class="progress"><div class="progress-bar" style="width:${Math.round(l.count/max_c*100)}%;background:#3B82F6"></div></div>
+    </div>`).join('') || '<div class="text-muted text-sm">Aucune donnée</div>';
+
+  // Sectors
+  const max_s = Math.max(...d.sectors.map(x=>x.count),1);
+  document.getElementById('sectorsStats').innerHTML = d.sectors.map((s,i)=>`
+    <div style="margin-bottom:10px">
+      <div class="flex justify-between" style="font-size:13px;margin-bottom:4px"><span>${s.name}</span><span class="text-muted">${s.count}</span></div>
+      <div class="progress"><div class="progress-bar" style="width:${Math.round(s.count/max_s*100)}%;background:hsl(${i*36},70%,50%)"></div></div>
+    </div>`).join('') || '<div class="text-muted text-sm">Aucune donnée</div>';
+
+  // Logs table
+  document.getElementById('logsTable').innerHTML = d.logs.map(l=>`
+    <tr>
+      <td style="font-weight:600">${l.source_name}</td>
+      <td><span class="badge ${l.status==='success'?'badge-green':l.status==='error'?'badge-red':'badge-gray'}">${l.status==='success'?'✅ Succès':l.status==='error'?'❌ Erreur':'🔄 En cours'}</span></td>
+      <td>${l.found}</td>
+      <td style="color:var(--accent);font-weight:600">${l.new_items}</td>
+      <td class="text-muted text-xs" style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${l.message||'—'}</td>
+      <td class="text-muted text-xs">${l.started_at}</td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Aucune activité</td></tr>';
+}
+
+loadReports();
+</script>
+{% endblock %}

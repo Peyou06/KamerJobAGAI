@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Créer mon CV — CamerJob Watch{% endblock %}
+{% block page_title %}📄 Créer mon CV{% endblock %}
+
+{% block head %}
+<style>
+.cv-wrap{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+.cv-sec{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px}
+.cv-sec-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.cv-preview-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:sticky;top:70px}
+#cvPaper{background:#fff;color:#1a1a1a;padding:28px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.18);min-height:380px}
+.exp-block{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;position:relative}
+.exp-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;opacity:.5}
+.exp-del:hover{opacity:1;color:#EF4444}
+.europass-banner{background:linear-gradient(135deg,#003399 0%,#0055cc 100%);border-radius:12px;padding:18px 20px;color:#fff;display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.ep-ico{font-size:38px;flex-shrink:0}
+.ep-txt{flex:1}
+.ep-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.ep-desc{font-size:12px;opacity:.85;line-height:1.4}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Bandeau Europass -->
+<div class="europass-banner">
+  <div class="ep-ico">🇪🇺</div>
+  <div class="ep-txt">
+    <div class="ep-title">Europass — CV Officiel Européen</div>
+    <div class="ep-desc">Créez un CV reconnu dans toute l'Europe et les pays partenaires. Gratuit et officiel.</div>
+  </div>
+  <a href="https://europa.eu/europass/eportfolio/screen/profile?lang=fr" target="_blank"
+     class="btn" style="background:#fff;color:#003399;font-weight:700;flex-shrink:0">
+    🚀 Ouvrir Europass
+  </a>
+</div>
+
+<div class="cv-wrap">
+  <!-- Formulaire -->
+  <div>
+    <div class="cv-sec">
+      <div class="cv-sec-title">👤 Informations personnelles</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Prénom *</label><input id="cvFn" class="form-control" placeholder="Jean" oninput="updatePreview()"></div>
+        <div class="form-group"><label class="form-label">Nom *</label><input id="cvLn" class="form-control" placeholder="DUPONT" oninput="updatePreview()"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Titre / Poste recherché</label><input id="cvRole" class="form-control" placeholder="Ingénieur Informatique | Chef de Projet" oninput="updatePreview()"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Email</label><input id="cvEmail" class="form-control" type="email" placeholder="jean@email.com" oninput="updatePreview()"></div>
+        <div class="form-group"><label class="form-label">Téléphone</label><input id="cvTel" class="form-control" placeholder="+237 6XX XXX XXX" oninput="updatePreview()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Ville</label><input id="cvCity" class="form-control" placeholder="Douala, Cameroun" oninput="updatePreview()"></div>
+        <div class="form-group"><label class="form-label">LinkedIn / Site web</label><input id="cvWeb" class="form-control" placeholder="linkedin.com/in/..." oninput="updatePreview()"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Profil / Résumé</label><textarea id="cvSummary" class="form-control" rows="3" placeholder="Bref résumé de votre profil..." oninput="updatePreview()"></textarea></div>
+    </div>
+
+    <div class="cv-sec">
+      <div class="cv-sec-title">💼 Expériences professionnelles</div>
+      <div id="expList"></div>
+      <button class="btn btn-secondary w-full" onclick="addExp()">+ Ajouter une expérience</button>
+    </div>
+
+    <div class="cv-sec">
+      <div class="cv-sec-title">🎓 Formation</div>
+      <div id="eduList"></div>
+      <button class="btn btn-secondary w-full" onclick="addEdu()">+ Ajouter une formation</button>
+    </div>
+
+    <div class="cv-sec">
+      <div class="cv-sec-title">⚡ Compétences & Langues</div>
+      <div class="form-group"><label class="form-label">Compétences (séparées par des virgules)</label>
+        <input id="cvSkills" class="form-control" placeholder="Python, Excel, Gestion de projet..." oninput="updatePreview()">
+      </div>
+      <div class="form-group"><label class="form-label">Langues</label>
+        <input id="cvLangs" class="form-control" placeholder="Français (natif), Anglais (courant)..." oninput="updatePreview()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Aperçu -->
+  <div class="cv-preview-panel">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-semibold text-sm">👁️ Aperçu</div>
+    </div>
+    <div id="cvPaper"><div style="text-align:center;padding:40px 10px;color:#999;font-size:12px">Remplis le formulaire<br>pour voir l'aperçu ici</div></div>
+    <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-primary w-full" onclick="exportCV()">⬇️ Exporter en HTML</button>
+      <button class="btn btn-secondary w-full" onclick="printCV()">🖨️ Imprimer / Enreg. PDF</button>
+      <a href="https://europa.eu/europass/eportfolio/screen/profile?lang=fr" target="_blank"
+         class="btn w-full" style="background:#003399;color:#fff;justify-content:center">🇪🇺 Créer sur Europass</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let exps=[],edus=[],expId=0,eduId=0;
+
+function addExp(){const id=++expId;exps.push({id,title:'',org:'',period:'',desc:''});renderExps();}
+function addEdu(){const id=++eduId;edus.push({id,degree:'',school:'',year:''});renderEdus();}
+function delExp(id){exps=exps.filter(e=>e.id!==id);renderExps();updatePreview();}
+function delEdu(id){edus=edus.filter(e=>e.id!==id);renderEdus();updatePreview();}
+
+function renderExps(){
+  document.getElementById('expList').innerHTML=exps.map(e=>`
+    <div class="exp-block">
+      <button class="exp-del" onclick="delExp(${e.id})">✕</button>
+      <div class="form-row mb-2">
+        <input class="form-control" placeholder="Poste / Titre" value="${e.title}" oninput="exps.find(x=>x.id==${e.id}).title=this.value;updatePreview()">
+        <input class="form-control" placeholder="Entreprise" value="${e.org}" oninput="exps.find(x=>x.id==${e.id}).org=this.value;updatePreview()">
+      </div>
+      <input class="form-control mb-2" placeholder="Période (ex: Jan 2022 – Déc 2023)" value="${e.period}" oninput="exps.find(x=>x.id==${e.id}).period=this.value;updatePreview()">
+      <textarea class="form-control" rows="2" placeholder="Description des missions..." oninput="exps.find(x=>x.id==${e.id}).desc=this.value;updatePreview()">${e.desc}</textarea>
+    </div>`).join('');
+}
+function renderEdus(){
+  document.getElementById('eduList').innerHTML=edus.map(e=>`
+    <div class="exp-block">
+      <button class="exp-del" onclick="delEdu(${e.id})">✕</button>
+      <div class="form-row mb-2">
+        <input class="form-control" placeholder="Diplôme / Certification" value="${e.degree}" oninput="edus.find(x=>x.id==${e.id}).degree=this.value;updatePreview()">
+        <input class="form-control" placeholder="Établissement" value="${e.school}" oninput="edus.find(x=>x.id==${e.id}).school=this.value;updatePreview()">
+      </div>
+      <input class="form-control" placeholder="Année (ex: 2019)" value="${e.year}" oninput="edus.find(x=>x.id==${e.id}).year=this.value;updatePreview()">
+    </div>`).join('');
+}
+
+function buildHTML(){
+  const fn=document.getElementById('cvFn').value;
+  const ln=document.getElementById('cvLn').value;
+  const role=document.getElementById('cvRole').value;
+  const email=document.getElementById('cvEmail').value;
+  const tel=document.getElementById('cvTel').value;
+  const city=document.getElementById('cvCity').value;
+  const web=document.getElementById('cvWeb').value;
+  const summary=document.getElementById('cvSummary').value;
+  const skills=document.getElementById('cvSkills').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const langs=document.getElementById('cvLangs').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!fn&&!ln&&!role&&!summary&&!exps.length&&!edus.length&&!skills.length)
+    return '<div style="text-align:center;padding:40px 10px;color:#999;font-size:12px">Remplis le formulaire<br>pour voir l\'aperçu ici</div>';
+  return `
+  <div style="border-bottom:3px solid #2e7d32;padding-bottom:12px;margin-bottom:14px">
+    <div style="font-size:20px;font-weight:800">${fn} ${ln.toUpperCase()}</div>
+    ${role?`<div style="font-size:13px;color:#2e7d32;font-weight:600;margin:3px 0">${role}</div>`:''}
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:10px;color:#555;margin-top:5px">
+      ${email?`<span>✉️ ${email}</span>`:''}${tel?`<span>📞 ${tel}</span>`:''}${city?`<span>📍 ${city}</span>`:''}${web?`<span>🔗 ${web}</span>`:''}
+    </div>
+  </div>
+  ${summary?`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#2e7d32;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:6px">Profil</div><div style="font-size:11px;color:#444">${summary}</div></div>`:''}
+  ${exps.length?`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#2e7d32;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:8px">Expériences</div>${exps.map(e=>`<div style="margin-bottom:8px"><div style="font-weight:700;font-size:11px">${e.title}</div><div style="color:#666;font-size:10px">${e.org}${e.period?' · '+e.period:''}</div>${e.desc?`<div style="font-size:10px;color:#444;margin-top:2px">${e.desc}</div>`:''}</div>`).join('')}</div>`:''}
+  ${edus.length?`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#2e7d32;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:8px">Formation</div>${edus.map(e=>`<div style="margin-bottom:6px"><div style="font-weight:700;font-size:11px">${e.degree}</div><div style="color:#666;font-size:10px">${e.school}${e.year?' · '+e.year:''}</div></div>`).join('')}</div>`:''}
+  ${skills.length?`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#2e7d32;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:6px">Compétences</div><div style="display:flex;flex-wrap:wrap;gap:4px">${skills.map(s=>`<span style="background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600">${s}</span>`).join('')}</div></div>`:''}
+  ${langs.length?`<div><div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#2e7d32;border-bottom:1px solid #eee;padding-bottom:3px;margin-bottom:6px">Langues</div>${langs.map(l=>`<div style="font-size:11px;color:#444">• ${l}</div>`).join('')}</div>`:''}`;
+}
+
+function updatePreview(){document.getElementById('cvPaper').innerHTML=buildHTML();}
+
+function exportCV(){
+  const fn=document.getElementById('cvFn').value||'Mon';
+  const ln=document.getElementById('cvLn').value||'CV';
+  const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>CV ${fn} ${ln}</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:'Outfit',sans-serif;max-width:750px;margin:30px auto;padding:40px;color:#1a1a1a}</style></head><body>${buildHTML()}</body></html>`;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+  a.download=`CV_${fn}_${ln}.html`;a.click();
+  toast('CV exporté !');
+}
+
+function printCV(){
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:'Outfit',sans-serif;padding:40px;max-width:750px;margin:0 auto}@media print{body{padding:20px}}</style></head><body>${buildHTML()}</body></html>`);
+  w.document.close();w.print();
+}
+
+renderExps();renderEdus();
+</script>
+{% endblock %}

@@ -1,0 +1,631 @@
+{% extends "base.html" %}
+{% block title %}Mon Agent IA — CamerJob Watch{% endblock %}
+{% block page_title %}🤖 Mon Agent IA{% endblock %}
+
+{% block head %}
+<style>
+.aw{max-width:960px;margin:0 auto}
+.auth-box{max-width:440px;margin:40px auto}
+.atabs{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:20px}
+.atab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;
+  background:var(--card2);color:var(--muted);border:none;transition:all .2s}
+.atab.on{background:var(--green);color:#fff}
+.ag-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.ag-tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:all .2s}
+.ag-tab.on{background:var(--green);color:#fff;border-color:var(--green)}
+.pnl{display:none}.pnl.on{display:block}
+.cfg-g{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:620px){.cfg-g{grid-template-columns:1fr}}
+.cfg-c{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border-color .2s}
+.cfg-c.ok{border-color:rgba(0,165,80,.5)}.cfg-c.fail{border-color:rgba(206,17,38,.4)}
+.cfg-ico{font-size:26px;margin-bottom:8px}
+.cfg-h{font-size:14px;font-weight:700;margin-bottom:5px}
+.cfg-d{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+.sb{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-left:6px}
+.sb-ok{background:rgba(0,165,80,.15);color:var(--accent)}
+.sb-fail{background:rgba(206,17,38,.1);color:#EF4444}
+.sb-none{background:rgba(128,128,128,.1);color:var(--muted)}
+.fb{border-radius:8px;padding:10px 13px;font-size:13px;margin-top:9px;line-height:1.6;display:none;white-space:pre-line}
+.fb-ok{background:rgba(0,165,80,.08);border:1px solid rgba(0,165,80,.3);color:var(--accent)}
+.fb-err{background:rgba(206,17,38,.06);border:1px solid rgba(206,17,38,.3);color:#EF4444}
+.fb-inf{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.25);color:#60A5FA}
+.upz{border:2px dashed var(--border);border-radius:9px;padding:16px;text-align:center;cursor:pointer;transition:all .2s}
+.upz:hover{border-color:var(--green)}.upz.done{border-style:solid;border-color:var(--green)}
+.sec-g{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.sec-b{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:all .2s}
+.sec-b.on{background:var(--green);color:#fff;border-color:var(--green)}
+.of-row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px;
+  display:flex;align-items:flex-start;gap:11px;transition:all .2s;margin-bottom:8px}
+.of-row:hover{border-color:var(--accent)}
+.sm{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px;text-align:center}
+.sm-n{font-size:24px;font-weight:800;line-height:1}
+.sm-l{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.dg{background:#00A550}.do{background:#F97316}.db{background:#3B82F6}
+.guide-box{background:var(--card2);border-radius:8px;padding:12px;margin-bottom:12px}
+.gs{display:flex;gap:9px;margin-bottom:8px;font-size:13px;align-items:flex-start}
+.gn{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:11px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="aw">
+
+<!-- ══ AUTH ══════════════════════════════════════════════════════════════════ -->
+<div id="sec-auth">
+  <div class="auth-box card">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:44px;margin-bottom:8px">🤖</div>
+      <div style="font-size:20px;font-weight:800">Mon Agent IA</div>
+      <div class="text-sm text-muted mt-2">Candidature automatique · Powered by Claude AI</div>
+    </div>
+    <div class="atabs">
+      <button class="atab on" id="btnL" onclick="swAuth('login')">Se connecter</button>
+      <button class="atab" id="btnR" onclick="swAuth('reg')">Créer un compte</button>
+    </div>
+
+    <div id="fLogin">
+      <div class="form-group"><label class="form-label">Email</label>
+        <input id="lEmail" class="form-control" type="email" placeholder="votre@email.com"
+               onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="form-group"><label class="form-label">Mot de passe</label>
+        <input id="lPwd" class="form-control" type="password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div id="fbL" class="fb fb-err" style="display:none"></div>
+      <button class="btn btn-primary w-full mt-3" onclick="doLogin()">🔐 Se connecter</button>
+    </div>
+
+    <div id="fReg" style="display:none">
+      <div class="form-group"><label class="form-label">Nom complet *</label>
+        <input id="rName" class="form-control" placeholder="Jean Dupont"
+               onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div class="form-group"><label class="form-label">Email *</label>
+        <input id="rEmail" class="form-control" type="email" placeholder="votre@email.com"
+               onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div class="form-group"><label class="form-label">Mot de passe * (min. 6 caractères)</label>
+        <input id="rPwd" class="form-control" type="password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div id="fbR" class="fb fb-err" style="display:none"></div>
+      <button class="btn btn-primary w-full mt-3" onclick="doRegister()">✅ Créer mon compte</button>
+      <div class="text-xs text-muted mt-2" style="text-align:center">Le premier compte créé devient automatiquement Admin</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ═════════════════════════════════════════════════════════════ -->
+<div id="sec-dash" style="display:none">
+
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+    <div>
+      <div style="font-size:18px;font-weight:800" id="uName"></div>
+      <div class="text-sm text-muted" id="uEmail"></div>
+    </div>
+    <div class="flex gap-2">
+      <span id="roleBadge" class="badge" style="display:none"></span>
+      <a href="/admin/agent" id="adminLink" class="btn btn-secondary btn-sm" style="display:none">🛡️ Admin</a>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">🚪 Déconnexion</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+    <div class="sm"><div class="sm-n" id="stT">0</div><div class="sm-l">Total</div></div>
+    <div class="sm"><div class="sm-n db" id="stG">0</div><div class="sm-l">Générées</div></div>
+    <div class="sm"><div class="sm-n do" id="stB">0</div><div class="sm-l">Brouillons</div></div>
+    <div class="sm"><div class="sm-n dg" id="stE">0</div><div class="sm-l">Envoyées</div></div>
+  </div>
+
+  <div class="ag-tabs">
+    <div class="ag-tab on" onclick="goTab('cfg')"    id="t-cfg">⚙️ Configuration</div>
+    <div class="ag-tab"    onclick="goTab('offres')" id="t-offres">🔍 Offres</div>
+    <div class="ag-tab"    onclick="goTab('gen')"    id="t-gen">✍️ Générer</div>
+    <div class="ag-tab"    onclick="goTab('post')"   id="t-post">📤 Postuler</div>
+    <div class="ag-tab"    onclick="goTab('hist')"   id="t-hist">📋 Historique</div>
+  </div>
+
+  <!-- ═══ CONFIG ══════════════════════════════════════════════════════════ -->
+  <div class="pnl on" id="p-cfg">
+    <div class="cfg-g">
+
+      <div class="cfg-c" id="cc-cv">
+        <div class="cfg-ico">📄</div>
+        <div class="cfg-h">Votre CV <span id="sb-cv" class="sb sb-none">Non chargé</span></div>
+        <div class="cfg-d">Uploadez votre CV (PDF ou DOCX). L'agent l'analyse pour personnaliser vos lettres et détecter vos secteurs.</div>
+        <div class="upz" id="uz-cv" onclick="document.getElementById('fi-cv').click()">
+          <div style="font-size:22px;margin-bottom:4px">📂</div>
+          <div class="text-sm font-semibold" id="zt-cv">Cliquer pour choisir</div>
+          <div class="text-xs text-muted mt-1">PDF, DOCX ou TXT · Max 5MB</div>
+        </div>
+        <input type="file" id="fi-cv" accept=".pdf,.docx,.txt" style="display:none" onchange="uploadCV(this)">
+        <div id="pv-cv" class="text-xs text-muted mt-2" style="display:none;word-break:break-word"></div>
+      </div>
+
+      <div class="cfg-c" id="cc-lm">
+        <div class="cfg-ico">✉️</div>
+        <div class="cfg-h">Modèle de lettre <span id="sb-lm" class="sb sb-none">Non chargé</span></div>
+        <div class="cfg-d">Uploadez une ancienne lettre de motivation. L'IA reproduira votre style. <em>Optionnel mais améliore la qualité.</em></div>
+        <div class="upz" id="uz-lm" onclick="document.getElementById('fi-lm').click()">
+          <div style="font-size:22px;margin-bottom:4px">📝</div>
+          <div class="text-sm font-semibold" id="zt-lm">Cliquer pour choisir</div>
+          <div class="text-xs text-muted mt-1">PDF, DOCX ou TXT</div>
+        </div>
+        <input type="file" id="fi-lm" accept=".pdf,.docx,.txt" style="display:none" onchange="uploadLettre(this)">
+      </div>
+
+      <div class="cfg-c" id="cc-gm">
+        <div class="cfg-ico">📧</div>
+        <div class="cfg-h">Gmail <span id="sb-gm" class="sb sb-none">Non configuré</span></div>
+        <div class="cfg-d">Pour postuler par email. Vous avez besoin d'un <strong>mot de passe d'application Gmail</strong>.</div>
+        <div class="guide-box">
+          <div class="text-xs font-semibold mb-2" style="text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">📌 Créer un mot de passe d'application</div>
+          <div class="gs"><div class="gn">1</div><div>Aller sur <a href="https://myaccount.google.com/security" target="_blank" style="color:var(--accent)">myaccount.google.com → Sécurité</a></div></div>
+          <div class="gs"><div class="gn">2</div><div>Activer la <strong>Validation en 2 étapes</strong></div></div>
+          <div class="gs"><div class="gn">3</div><div>Rechercher <strong>"Mots de passe des applications"</strong> dans la barre Google Account</div></div>
+          <div class="gs"><div class="gn">4</div><div>Créer un mot de passe → copier les <strong>16 caractères</strong></div></div>
+        </div>
+        <div class="form-group"><label class="form-label">Adresse Gmail</label>
+          <input id="gmAddr" class="form-control" type="email" placeholder="vous@gmail.com"></div>
+        <div class="form-group"><label class="form-label">Mot de passe d'application (16 caractères)</label>
+          <input id="gmPwd" class="form-control" type="password" placeholder="abcd efgh ijkl mnop"></div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary btn-sm" onclick="saveGmail()">💾 Enregistrer</button>
+          <button class="btn btn-primary btn-sm" id="btnGmTest" onclick="testGmail()">🔌 Tester</button>
+        </div>
+        <div id="fb-gm" class="fb"></div>
+      </div>
+
+      <div class="cfg-c" id="cc-api">
+        <div class="cfg-ico">🔑</div>
+        <div class="cfg-h">Clé API Claude <span id="sb-api" class="sb sb-none">Non configurée</span></div>
+        <div class="cfg-d"><strong>Optionnel.</strong> Sans clé, l'agent génère des lettres via nos templates professionnels intégrés. Avec une clé Claude, les lettres sont encore plus personnalisées.</div>
+        <div class="guide-box">
+          <div class="text-xs" style="color:var(--muted)">📌 Obtenir une clé : <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a> → API Keys → Create Key<br>La clé commence par <code style="background:var(--card);padding:1px 5px;border-radius:4px">sk-ant-</code></div>
+        </div>
+        <div class="form-group"><label class="form-label">Clé API Anthropic (optionnel)</label>
+          <input id="apiKey" class="form-control" type="password" placeholder="sk-ant-api03-..."></div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary btn-sm" onclick="saveApiKey()">💾 Enregistrer</button>
+          <button class="btn btn-primary btn-sm" id="btnApiTest" onclick="testApiKey()">🔌 Tester</button>
+        </div>
+        <div id="fb-api" class="fb"></div>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="font-bold mb-1" style="font-size:14px">🎯 Secteurs d'intérêt</div>
+      <div class="text-sm text-muted mb-2">Sélectionnez vos secteurs pour des recommandations d'offres personnalisées.</div>
+      <div class="sec-g" id="secG"></div>
+      <button class="btn btn-secondary btn-sm mt-3" onclick="saveSectors()">💾 Sauvegarder</button>
+      <div id="fb-sec" class="fb"></div>
+    </div>
+  </div>
+
+  <!-- ═══ OFFRES ═══════════════════════════════════════════════════════════ -->
+  <div class="pnl" id="p-offres">
+    <div class="flex items-center justify-between mb-3">
+      <div class="text-sm text-muted" id="ofInfo"></div>
+      <button class="btn btn-secondary btn-sm" onclick="loadOffres()">🔄 Actualiser</button>
+    </div>
+    <div id="ofList"></div>
+  </div>
+
+  <!-- ═══ GÉNÉRER ══════════════════════════════════════════════════════════ -->
+  <div class="pnl" id="p-gen">
+    <div class="card mb-3" style="border-left:3px solid #3B82F6">
+      <div class="font-bold mb-1" style="font-size:14px">✍️ Générer lettre + email</div>
+      <div class="text-sm text-muted" id="methInfo">Génération via templates intelligents (sans clé API). Le contenu est sauvegardé mais <strong>non envoyé</strong> — utilisez l'onglet Postuler pour envoyer.</div>
+    </div>
+    <div class="card mb-3">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Titre du poste *</label>
+          <input id="gTitle" class="form-control" placeholder="Ex: Ingénieur Développeur"></div>
+        <div class="form-group"><label class="form-label">Organisation *</label>
+          <input id="gOrg" class="form-control" placeholder="Ex: Orange Cameroun"></div>
+      </div>
+      <div class="form-group"><label class="form-label">URL de l'offre</label>
+        <input id="gUrl" class="form-control" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Description du poste <span class="text-muted">(améliore la qualité)</span></label>
+        <textarea id="gDesc" class="form-control" rows="3" placeholder="Colle la description ici..."></textarea></div>
+      <button class="btn btn-primary" id="genBtn" onclick="doGenerer()">🤖 Générer</button>
+      <div id="fb-gen" class="fb"></div>
+    </div>
+    <div id="genRes" style="display:none">
+      <div class="card mb-3">
+        <div class="flex items-center justify-between mb-2">
+          <div class="font-bold" style="font-size:14px">📧 Email</div>
+          <span id="methBadge" class="badge badge-blue"></span>
+        </div>
+        <div class="form-group"><label class="form-label">Objet</label><input id="outSujet" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Corps</label><textarea id="outCorps" class="form-control" rows="7"></textarea></div>
+      </div>
+      <div class="card mb-3">
+        <div class="font-bold mb-2" style="font-size:14px">📄 Lettre de motivation</div>
+        <textarea id="outLettre" class="form-control" rows="14"></textarea>
+      </div>
+      <div class="card" style="background:rgba(0,165,80,.04);border-color:rgba(0,165,80,.2)">
+        <div class="font-semibold mb-2" style="font-size:13px">✅ Généré — Que faire maintenant ?</div>
+        <button class="btn btn-primary" onclick="versPost()">📤 Aller vers Postuler →</button>
+        <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="doGenerer()">🔄 Régénérer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ POSTULER ═════════════════════════════════════════════════════════ -->
+  <div class="pnl" id="p-post">
+    <div class="card mb-3" style="border-left:3px solid #F97316">
+      <div class="font-bold mb-1" style="font-size:14px">📤 Postuler — Indépendant de la génération</div>
+      <div class="text-sm text-muted">Collez ici n'importe quel contenu — généré par l'IA ou rédigé manuellement. Gmail doit être configuré et testé.</div>
+    </div>
+    <div class="card mb-3">
+      <div class="form-group"><label class="form-label">Email du recruteur <span class="text-muted">(obligatoire pour envoi direct, optionnel pour brouillon)</span></label>
+        <input id="pDest" class="form-control" type="email" placeholder="recruteur@entreprise.cm"></div>
+      <div class="form-group"><label class="form-label">Objet de l'email *</label>
+        <input id="pSujet" class="form-control" placeholder="Candidature au poste de..."></div>
+      <div class="form-group"><label class="form-label">Corps de l'email *</label>
+        <textarea id="pCorps" class="form-control" rows="7" placeholder="Madame, Monsieur,&#10;&#10;..."></textarea></div>
+      <div class="form-group"><label class="form-label">Lettre de motivation <span class="text-muted">(sera ajoutée dans le corps)</span></label>
+        <textarea id="pLettre" class="form-control" rows="12" placeholder="Madame, Monsieur,&#10;&#10;C'est avec un vif intérêt..."></textarea></div>
+    </div>
+    <div class="card">
+      <div class="font-bold mb-3" style="font-size:14px">📤 Mode d'envoi</div>
+      <div class="grid-2" style="gap:12px;margin-bottom:12px">
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:14px">
+          <div class="font-semibold mb-1" style="font-size:13px">📥 Brouillon</div>
+          <div class="text-xs text-muted mb-3">Sauvegardé dans vos brouillons Gmail. Vous relisez et envoyez quand vous voulez.</div>
+          <button class="btn btn-orange btn-sm w-full" onclick="doPost('brouillon')">📥 Sauvegarder en brouillon</button>
+        </div>
+        <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:14px">
+          <div class="font-semibold mb-1" style="font-size:13px">🚀 Envoi direct</div>
+          <div class="text-xs text-muted mb-3">Envoyé immédiatement avec votre CV en pièce jointe.</div>
+          <button class="btn btn-primary btn-sm w-full" onclick="doPost('envoyer')">🚀 Envoyer</button>
+        </div>
+      </div>
+      <div id="fb-post" class="fb"></div>
+    </div>
+  </div>
+
+  <!-- ═══ HISTORIQUE ════════════════════════════════════════════════════════ -->
+  <div class="pnl" id="p-hist">
+    <div class="flex items-center justify-between mb-3">
+      <div class="text-sm text-muted" id="histInfo"></div>
+      <button class="btn btn-secondary btn-sm" onclick="window.open('/api/agent/export')">📊 Excel</button>
+    </div>
+    <div id="histList"></div>
+  </div>
+
+</div><!-- /sec-dash -->
+</div><!-- /aw -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Utilise api() définie dans base.html */
+const SECS=['Informatique & Tech','Finance & Banque','Santé','Éducation',
+  'Génie Civil & BTP','Télécoms','Agriculture','Transport & Logistique',
+  'Humanitaire & ONG','Administration & RH'];
+let _u=null,_cid=null,_sel=[];
+
+async function init(){
+  const r=await api('/api/agent/me');
+  if(r.auth){_u=r.user;renderDash(r);}
+  else{show('sec-auth');hide('sec-dash');}
+}
+
+function renderDash(r){
+  hide('sec-auth');show('sec-dash');
+  _u=r.user;
+  document.getElementById('uName').textContent='Bonjour, '+r.user.name+' 👋';
+  document.getElementById('uEmail').textContent=r.user.email;
+  // Rôle
+  if(r.user.role==='admin'){
+    const rb=document.getElementById('roleBadge');
+    rb.textContent='🛡️ Admin';rb.className='badge badge-orange';rb.style.display='';
+    document.getElementById('adminLink').style.display='';
+  }
+  const s=r.stats;
+  document.getElementById('stT').textContent=s.total;
+  document.getElementById('stG').textContent=s.generes;
+  document.getElementById('stB').textContent=s.brouillons;
+  document.getElementById('stE').textContent=s.envoyes;
+  const u=r.user;
+  setSB('sb-cv',  u.has_cv     ?'ok':'none', u.has_cv     ?'✅ Chargé'   :'⚠️ Non chargé');
+  setSB('sb-lm',  u.has_lettre ?'ok':'none', u.has_lettre ?'✅ Chargé'   :'Non chargé');
+  setSB('sb-gm',  u.gmail_ok   ?'ok':'none', u.gmail_ok   ?'✅ Connecté' :'⚠️ Non vérifié');
+  setSB('sb-api', u.api_ok     ?'ok':'none', u.api_ok     ?'✅ Valide'   :'Non configurée');
+  if(u.gmail_ok)  document.getElementById('cc-gm').classList.add('ok');
+  if(u.api_ok)    document.getElementById('cc-api').classList.add('ok');
+  if(u.has_cv)   {document.getElementById('uz-cv').classList.add('done');document.getElementById('zt-cv').textContent='✅ CV chargé';}
+  if(u.has_lettre){document.getElementById('uz-lm').classList.add('done');document.getElementById('zt-lm').textContent='✅ Modèle chargé';}
+  if(u.gmail)     document.getElementById('gmAddr').value=u.gmail||'';
+  document.getElementById('methInfo').innerHTML=u.api_ok
+    ?'✅ <strong>Clé API Claude valide</strong> — Les lettres seront générées par l\'IA Claude.'
+    :'ℹ️ Génération via <strong>templates professionnels intégrés</strong> (sans clé API). Configurez une clé Claude pour plus de personnalisation.';
+  _sel=u.sectors?u.sectors.split(',').filter(Boolean):[];
+  renderSecs();
+}
+
+function setSB(id,t,txt){const e=document.getElementById(id);e.className='sb sb-'+t;e.textContent=txt;}
+function show(id){document.getElementById(id).style.display='';}
+function hide(id){document.getElementById(id).style.display='none';}
+function showFb(id,cls,msg){const e=document.getElementById(id);e.className='fb '+cls;e.textContent=msg;e.style.display='';}
+function hideFb(id){document.getElementById(id).style.display='none';}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+function swAuth(t){
+  document.getElementById('fLogin').style.display=t==='login'?'':'none';
+  document.getElementById('fReg').style.display=t==='reg'?'':'none';
+  document.getElementById('btnL').className='atab '+(t==='login'?'on':'');
+  document.getElementById('btnR').className='atab '+(t==='reg'?'on':'');
+  hideFb('fbL');hideFb('fbR');
+}
+async function doLogin(){
+  hideFb('fbL');
+  const email=document.getElementById('lEmail').value.trim();
+  const pwd=document.getElementById('lPwd').value;
+  if(!email||!pwd){showFb('fbL','fb-err','Remplissez tous les champs');return;}
+  const r=await api('/api/agent/login',{method:'POST',body:JSON.stringify({email,password:pwd})});
+  if(r.ok) init();
+  else showFb('fbL','fb-err',r.err||'Erreur de connexion');
+}
+async function doRegister(){
+  hideFb('fbR');
+  const name=document.getElementById('rName').value.trim();
+  const email=document.getElementById('rEmail').value.trim();
+  const pwd=document.getElementById('rPwd').value;
+  if(!name||!email||!pwd){showFb('fbR','fb-err','Remplissez tous les champs');return;}
+  if(pwd.length<6){showFb('fbR','fb-err','Mot de passe : minimum 6 caractères');return;}
+  const r=await api('/api/agent/register',{method:'POST',body:JSON.stringify({name,email,password:pwd})});
+  if(r.ok){
+    if(r.role==='admin') toast(r.msg||'Compte admin créé !');
+    else toast(r.msg||'Compte créé !');
+    init();
+  } else showFb('fbR','fb-err',r.err||'Erreur');
+}
+async function doLogout(){
+  await api('/api/agent/logout',{method:'POST'});
+  _u=null; hide('sec-dash'); show('sec-auth'); toast('Déconnexion réussie');
+}
+
+// ── Onglets ───────────────────────────────────────────────────────────────────
+function goTab(t){
+  document.querySelectorAll('.ag-tab').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.pnl').forEach(e=>e.classList.remove('on'));
+  document.getElementById('t-'+t).classList.add('on');
+  document.getElementById('p-'+t).classList.add('on');
+  if(t==='offres')loadOffres();
+  if(t==='hist')loadHist();
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
+async function saveGmail(){
+  const g=document.getElementById('gmAddr').value.trim();
+  const p=document.getElementById('gmPwd').value.trim();
+  if(!g||!p){showFb('fb-gm','fb-err','Email et mot de passe requis');return;}
+  const r=await api('/api/agent/save-gmail',{method:'POST',body:JSON.stringify({gmail:g,pwd:p})});
+  if(r.ok) showFb('fb-gm','fb-inf','💾 Enregistré. Cliquez sur "Tester" pour vérifier la connexion.');
+  else showFb('fb-gm','fb-err',r.err||'Erreur');
+}
+async function testGmail(){
+  const g=document.getElementById('gmAddr').value.trim();
+  const p=document.getElementById('gmPwd').value.trim();
+  const btn=document.getElementById('btnGmTest');
+  btn.textContent='⏳...'; btn.disabled=true;
+  const r=await api('/api/agent/test-gmail',{method:'POST',body:JSON.stringify({gmail:g,pwd:p})});
+  btn.textContent='🔌 Tester'; btn.disabled=false;
+  if(r.ok){
+    showFb('fb-gm','fb-ok',r.msg||'✅ Connexion Gmail réussie !');
+    setSB('sb-gm','ok','✅ Connecté');
+    document.getElementById('cc-gm').classList.add('ok');
+    if(_u)_u.gmail_ok=true;
+  } else {
+    showFb('fb-gm','fb-err',r.err||'Connexion échouée');
+    setSB('sb-gm','fail','❌ Échec');
+  }
+}
+async function saveApiKey(){
+  const k=document.getElementById('apiKey').value.trim();
+  if(!k){showFb('fb-api','fb-err','Clé API requise');return;}
+  const r=await api('/api/agent/save-apikey',{method:'POST',body:JSON.stringify({key:k})});
+  if(r.ok) showFb('fb-api','fb-inf','💾 Clé enregistrée. Cliquez sur "Tester" pour valider.');
+  else showFb('fb-api','fb-err',r.err||'Erreur');
+}
+async function testApiKey(){
+  const k=document.getElementById('apiKey').value.trim();
+  const btn=document.getElementById('btnApiTest');
+  btn.textContent='⏳...'; btn.disabled=true;
+  const r=await api('/api/agent/test-apikey',{method:'POST',body:JSON.stringify({key:k})});
+  btn.textContent='🔌 Tester'; btn.disabled=false;
+  if(r.ok){
+    showFb('fb-api','fb-ok',r.msg||'✅ Clé API valide !');
+    setSB('sb-api','ok','✅ Valide');
+    document.getElementById('cc-api').classList.add('ok');
+    document.getElementById('methInfo').innerHTML='✅ <strong>Clé API Claude valide</strong> — Les prochaines lettres seront générées par l\'IA Claude.';
+    if(_u)_u.api_ok=true;
+  } else {
+    showFb('fb-api','fb-err',r.err||'Clé invalide');
+    setSB('sb-api','fail','❌ Invalide');
+  }
+}
+async function uploadCV(inp){
+  const file=inp.files[0];if(!file)return;
+  const fd=new FormData();fd.append('file',file);
+  document.getElementById('zt-cv').textContent='⏳ Analyse...';
+  const r=await fetch('/api/agent/upload-cv',{method:'POST',body:fd}).then(x=>x.json());
+  if(r.ok){
+    document.getElementById('uz-cv').classList.add('done');
+    document.getElementById('zt-cv').textContent='✅ '+file.name;
+    document.getElementById('pv-cv').textContent='Aperçu: '+r.preview;
+    document.getElementById('pv-cv').style.display='';
+    setSB('sb-cv','ok','✅ Chargé');
+    toast('CV analysé — '+r.chars+' caractères extraits !');
+  } else { document.getElementById('zt-cv').textContent='❌ Erreur'; toast(r.err||'Erreur','error'); }
+}
+async function uploadLettre(inp){
+  const file=inp.files[0];if(!file)return;
+  const fd=new FormData();fd.append('file',file);
+  document.getElementById('zt-lm').textContent='⏳...';
+  const r=await fetch('/api/agent/upload-lettre',{method:'POST',body:fd}).then(x=>x.json());
+  if(r.ok){
+    document.getElementById('uz-lm').classList.add('done');
+    document.getElementById('zt-lm').textContent='✅ '+file.name;
+    setSB('sb-lm','ok','✅ Chargé');
+    toast('Modèle chargé !');
+  } else toast(r.err||'Erreur','error');
+}
+function renderSecs(){
+  document.getElementById('secG').innerHTML=SECS.map(s=>
+    `<div class="sec-b ${_sel.includes(s)?'on':''}" onclick="togSec('${s}')">${s}</div>`).join('');
+}
+function togSec(s){_sel=_sel.includes(s)?_sel.filter(x=>x!==s):[..._sel,s];renderSecs();}
+async function saveSectors(){
+  const r=await api('/api/agent/save-sectors',{method:'POST',body:JSON.stringify({sectors:_sel})});
+  if(r.ok){toast('Secteurs sauvegardés !');showFb('fb-sec','fb-ok','✅ Secteurs enregistrés');}
+  else toast('Erreur','error');
+}
+
+// ── Offres ────────────────────────────────────────────────────────────────────
+async function loadOffres(){
+  document.getElementById('ofList').innerHTML='<div class="empty-state"><div class="spin">⏳</div></div>';
+  const r=await api('/api/agent/offres');
+  document.getElementById('ofInfo').textContent=r.matched
+    ?`✅ ${r.offers.length} offres pour votre profil (${r.sectors.join(', ')})`
+    :`${r.offers.length} offres récentes — Configurez vos secteurs pour des recommandations`;
+  if(!r.offers.length){
+    document.getElementById('ofList').innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Aucune offre</div><div class="text-muted text-sm">Lancez un scraping dans Sources</div></div>';
+    return;
+  }
+  document.getElementById('ofList').innerHTML=r.offers.map(o=>`
+    <div class="of-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;margin-bottom:2px">${o.title}</div>
+        <div class="text-sm text-muted">🏢 ${o.organization||'—'} · 📍 ${o.location||'Cameroun'}</div>
+        <div class="flex gap-2 mt-1 flex-wrap">
+          ${o.sector?`<span class="badge badge-gray">${o.sector}</span>`:''}
+          ${o.deadline?`<span class="badge badge-orange">⏰ ${o.deadline}</span>`:''}
+          ${o.salary?`<span class="badge badge-green">💰 ${o.salary}</span>`:''}
+        </div>
+      </div>
+      <div class="flex flex-col gap-2" style="flex-shrink:0">
+        ${o.url?`<a href="${o.url}" target="_blank" class="btn btn-secondary btn-sm">🔗</a>`:''}
+        <button class="btn btn-primary btn-sm" onclick='preGen(${JSON.stringify(o.title)},${JSON.stringify(o.organization||"")},${JSON.stringify(o.description||"")},${JSON.stringify(o.url||"")})'>✍️</button>
+      </div>
+    </div>`).join('');
+}
+function preGen(t,o,d,u){
+  document.getElementById('gTitle').value=t;
+  document.getElementById('gOrg').value=o;
+  document.getElementById('gDesc').value=d;
+  document.getElementById('gUrl').value=u;
+  goTab('gen');
+}
+
+// ── GÉNÉRER ───────────────────────────────────────────────────────────────────
+async function doGenerer(){
+  const t=document.getElementById('gTitle').value.trim();
+  const o=document.getElementById('gOrg').value.trim();
+  if(!t){showFb('fb-gen','fb-err','Le titre du poste est obligatoire');return;}
+  if(!o){showFb('fb-gen','fb-err',"Le nom de l'organisation est obligatoire");return;}
+  hideFb('fb-gen');
+  const btn=document.getElementById('genBtn');
+  btn.textContent='⏳ Génération...'; btn.disabled=true;
+  const r=await api('/api/agent/generer',{method:'POST',body:JSON.stringify({
+    title:t,org:o,desc:document.getElementById('gDesc').value,url:document.getElementById('gUrl').value
+  })});
+  btn.textContent='🤖 Générer'; btn.disabled=false;
+  if(!r.ok){showFb('fb-gen','fb-err',r.err||'Erreur de génération');return;}
+  _cid=r.cid;
+  document.getElementById('outSujet').value=r.sujet||'';
+  document.getElementById('outCorps').value=r.corps||'';
+  document.getElementById('outLettre').value=r.lettre||'';
+  document.getElementById('methBadge').textContent=r.methode==='claude'?'✨ Claude AI':'📋 Template';
+  document.getElementById('genRes').style.display='';
+  showFb('fb-gen','fb-ok','✅ Contenu généré ! Modifiez si nécessaire, puis cliquez sur "Aller vers Postuler".');
+}
+function versPost(){
+  document.getElementById('pSujet').value=document.getElementById('outSujet').value;
+  document.getElementById('pCorps').value=document.getElementById('outCorps').value;
+  document.getElementById('pLettre').value=document.getElementById('outLettre').value;
+  goTab('post');
+}
+
+// ── POSTULER ──────────────────────────────────────────────────────────────────
+async function doPost(mode){
+  hideFb('fb-post');
+  const sujet=document.getElementById('pSujet').value.trim();
+  const corps=document.getElementById('pCorps').value.trim();
+  const dest=document.getElementById('pDest').value.trim();
+  if(!sujet){showFb('fb-post','fb-err',"L'objet de l'email est obligatoire");return;}
+  if(!corps){showFb('fb-post','fb-err',"Le corps de l'email est obligatoire");return;}
+  if(mode==='envoyer'&&(!dest||!dest.includes('@'))){
+    showFb('fb-post','fb-err',"L'email du recruteur est obligatoire pour l'envoi direct");return;
+  }
+  if(!_u||!_u.gmail_ok){
+    showFb('fb-post','fb-err','❌ Gmail non configuré. Allez dans Configuration → Gmail → cliquez sur Tester.');return;
+  }
+  const r=await api('/api/agent/postuler',{method:'POST',body:JSON.stringify({
+    sujet,corps,lettre:document.getElementById('pLettre').value,
+    dest,mode,cid:_cid,
+    title:document.getElementById('gTitle')?.value||'',
+    org:document.getElementById('gOrg')?.value||''
+  })});
+  if(r.ok){
+    showFb('fb-post','fb-ok',r.message);
+    toast(r.message);
+    _cid=null;
+    if(mode==='envoyer'){
+      ['pDest','pSujet','pCorps','pLettre'].forEach(id=>document.getElementById(id).value='');
+    }
+    init();
+  } else showFb('fb-post','fb-err',r.err||'Erreur');
+}
+
+// ── Historique ────────────────────────────────────────────────────────────────
+async function loadHist(){
+  const r=await api('/api/agent/historique');
+  if(!r.ok){document.getElementById('histList').innerHTML='<div class="empty-state">Erreur</div>';return;}
+  document.getElementById('histInfo').textContent=`${r.total} candidature${r.total>1?'s':''}`;
+  if(!r.items.length){
+    document.getElementById('histList').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Aucune candidature</div><div class="text-muted text-sm">Vos candidatures apparaissent ici après génération ou envoi</div></div>';
+    return;
+  }
+  const sc={envoye:'dg',brouillon:'do',genere:'db'};
+  const sl={envoye:'Envoyée',brouillon:'Brouillon',genere:'Générée'};
+  document.getElementById('histList').innerHTML=r.items.map(c=>`
+    <div class="card-sm flex items-center gap-3 mb-2">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700">${c.offer_title||'Sans titre'}</div>
+        <div class="text-sm text-muted">${c.offer_org||''} · ${(c.created_at||'').slice(0,10)}</div>
+        <div class="flex gap-2 mt-1 flex-wrap text-sm">
+          <span><span class="dot ${sc[c.statut]||'db'}"></span>${sl[c.statut]||c.statut}</span>
+          ${c.destinataire?`<span class="text-muted text-xs">→ ${c.destinataire}</span>`:''}
+          <span class="badge badge-gray text-xs">${c.methode==='claude'?'✨ Claude':'📋 Template'}</span>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-sm" title="Recharger" onclick="reloadC(${c.id})">📋</button>
+        ${c.offer_url?`<a href="${c.offer_url}" target="_blank" class="btn btn-secondary btn-sm">🔗</a>`:''}
+        <button class="btn btn-danger btn-sm" onclick="delC(${c.id})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+async function reloadC(id){
+  const r=await api(`/api/agent/historique/${id}`);
+  if(!r.ok)return;
+  const c=r.item;
+  document.getElementById('pSujet').value=c.email_sujet||'';
+  document.getElementById('pCorps').value=c.email_corps||'';
+  document.getElementById('pLettre').value=c.lettre||'';
+  document.getElementById('pDest').value=c.destinataire||'';
+  _cid=c.id; goTab('post'); toast('Candidature rechargée dans Postuler');
+}
+async function delC(id){
+  if(!confirm('Supprimer cette candidature ?'))return;
+  await api(`/api/agent/historique/${id}`,{method:'DELETE'});
+  toast('Supprimée'); loadHist(); init();
+}
+
+init();
+</script>
+{% endblock %}
